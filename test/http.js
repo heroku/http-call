@@ -26,7 +26,7 @@ let http = require('..')
 
 describe('http', () => {
   it('makes a GET request', () => {
-    http.get('https://api.heroku.com', {
+    return http.get('https://api.heroku.com', {
       debug: 2,
       requestMiddleware: debugRequest,
       responseMiddleware: debugResponse,
@@ -37,6 +37,5 @@ describe('http', () => {
     .then(rsp => {
       console.dir(rsp)
     })
-    .catch(console.error)
   })
 })
