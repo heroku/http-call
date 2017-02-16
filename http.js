@@ -22,7 +22,21 @@ class HTTPError extends Error {
   }
 }
 
+/**
+ * Utility for simple HTTP calls
+ * @class
+ */
 class HTTP {
+  /**
+   * make a simple http request
+   * @param url {string} - url or path to call
+   * @param options {object}
+   * @example
+   * ```js
+   * const http = require('http-call')
+   * await http.get('https://google.com')
+   * ```
+   */
   static get (url, options = {}) {
     let http = new HTTP(Object.assign({}, options, {
       method: 'GET',
