@@ -8,4 +8,26 @@ node utility for simple http calls
 
 # API Reference
 
-ERROR, Cannot find module.
+<a name="HTTP"></a>
+
+## HTTP
+Utility for simple HTTP calls
+
+**Kind**: global class  
+<a name="HTTP.get"></a>
+
+### HTTP.get(url, options)
+make a simple http request
+
+**Kind**: static method of <code>[HTTP](#HTTP)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| url | <code>string</code> | url or path to call |
+| options | <code>object</code> |  |
+
+**Example**  
+```js
+const http = require('http-call')
+await http.get('https://google.com')
+```
