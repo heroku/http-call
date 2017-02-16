@@ -15,7 +15,7 @@
   "license": "ISC",
   "main": "http.js",
   "scripts": {
-    "doc": "jsdoc2md --template README.hbs --files rwlockfile.js > README.md",
+    "doc": "jsdoc2md --template README.hbs --files http.js > README.md",
     "test": "standard",
     "version": "npm run doc && git add README.md"
   }
