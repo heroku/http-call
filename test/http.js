@@ -1,4 +1,5 @@
 const util = require('util')
+const {describe, it} = require('mocha')
 
 function renderHeaders (headers) {
   return Object.keys(headers).map(key => {
@@ -21,16 +22,21 @@ function debugResponse ({response, body}) {
   console.error(`--- BODY\n${util.inspect(body)}\n---`)
 }
 
-let http = require('.')
-http.get('https://api.heroku.com', {
-  debug: 2,
-  requestMiddleware: debugRequest,
-  responseMiddleware: debugResponse,
-  headers: {
-    'Accept': 'application/vnd.heroku+json; version=3'
-  }
+let http = require('..')
+
+describe('http', () => {
+  it('makes a GET request', () => {
+    http.get('https://api.heroku.com', {
+      debug: 2,
+      requestMiddleware: debugRequest,
+      responseMiddleware: debugResponse,
+      headers: {
+        'Accept': 'application/vnd.heroku+json; version=3'
+      }
+    })
+    .then(rsp => {
+      console.dir(rsp)
+    })
+    .catch(console.error)
+  })
 })
-.then(rsp => {
-  console.dir(rsp)
-})
-.catch(console.error)

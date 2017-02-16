@@ -16,7 +16,7 @@
   "main": "http.js",
   "scripts": {
     "doc": "jsdoc2md --template README.hbs --files http.js > README.md",
-    "test": "standard",
+    "test": "nyc mocha && standard",
     "version": "npm run doc && git add README.md"
   }
 }
