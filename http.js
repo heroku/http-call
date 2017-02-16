@@ -1,4 +1,5 @@
 const util = require('util')
+const url = require('url')
 
 function concat (stream) {
   return new Promise(resolve => {
@@ -8,18 +9,56 @@ function concat (stream) {
   })
 }
 
-function renderHeaders (headers) {
-  return Object.keys(headers).map(key => {
-    let value = key.toUpperCase() === 'AUTHORIZATION' ? 'REDACTED' : headers[key]
-    return '    ' + key + '=' + value
-  }).join('\n')
+function mergeOptions (...optionses) {
+  let options = {headers: {}}
+  for (let o of optionses) {
+    for (let k of Object.keys(o)) {
+      if (k === 'headers') Object.assign(options.headers, o.headers)
+      else options[k] = o[k]
+    }
+  }
+  return options
 }
 
 class HTTPError extends Error {
-  constructor (http) {
-    super(`HTTP Error ${http.response.statusCode} for ${http.method} ${http.url.href}\n${util.inspect(http.response.body)}`)
-    this.http = http
+  constructor (response, body) {
+    super(`HTTP Error ${response.statusCode} for ${response.req.method} ${response.req._headers.host}${response.req.path}\n${util.inspect(body)}`)
   }
+}
+
+function performRequest (options) {
+  let http = options.protocol === 'https:'
+    ? require('https')
+    : require('http')
+
+  return new Promise((resolve, reject) => {
+    let request = http.request(options, response => resolve({response, options}))
+    request.on('error', reject)
+    request.end()
+  })
+}
+
+function parse ({response, options}) {
+  if (options.raw) return Promise.resolve(response)
+  return concat(response).then(body => {
+    return response.headers['content-type'] === 'application/json'
+      ? JSON.parse(body)
+      : body
+  })
+}
+
+function handleResponse (r) {
+  return parse(r)
+  .then(body => {
+    r.body = body
+    return Promise.resolve(r.options.responseMiddleware ? r.options.responseMiddleware(r) : r)
+  }).then(() => {
+    if (r.response.statusCode >= 200 && r.response.statusCode < 300) {
+      return r.body
+    } else {
+      throw new HTTPError(r, r.body)
+    }
+  })
 }
 
 /**
@@ -27,6 +66,10 @@ class HTTPError extends Error {
  * @class
  */
 class HTTP {
+  constructor (options = {}) {
+    this.options = options
+  }
+
   /**
    * make a simple http request
    * @param url {string} - url or path to call
@@ -38,100 +81,34 @@ class HTTP {
    * ```
    */
   static get (url, options = {}) {
-    let http = new HTTP(Object.assign({}, options, {
+    const http = new HTTP()
+    return http._request(Object.assign({}, options, {
       method: 'GET',
       url
     }))
-    return http._request()
   }
 
-  constructor (options = {}) {
-    this.options = options
+  get (url, options = {}) {
+    return this._request(Object.assign({}, options, {
+      method: 'GET',
+      url
+    }))
   }
 
-  get debug () {
-    return this.options.debug
-  }
+  _request (options) {
+    options = mergeOptions({
+      headers: {'User-Agent': this._userAgent}
+    }, this.options, options)
 
-  get method () {
-    return this.options.method
-  }
+    let u = url.parse(options.url)
+    options.host = u.host
+    options.port = u.port || (u.protocol === 'https:' ? 443 : 80)
+    options.path = u.path
+    options.protocol = u.protocol
 
-  get url () {
-    const url = require('url')
-    return url.parse(this.options.url)
-  }
-
-  get headers () {
-    return Object.assign({
-      'User-Agent': this._userAgent
-    }, this.options.headers)
-  }
-
-  _request () {
-    return new Promise((resolve, reject) => {
-      let requestOptions = {
-        host: this.url.host,
-        port: this.url.port,
-        path: this.url.path,
-        headers: this.headers,
-        method: this.method
-      }
-      this._resolve = resolve
-      this._reject = reject
-      this.request = this._http.request(requestOptions, rsp => {
-        this.response = rsp
-        if (!this.options.raw) {
-          concat(rsp)
-            .then(body => { rsp.body = this._parse(body) })
-            .then(() => this._handleResponse())
-        } else this._handleResponse()
-      })
-      this._debugRequest()
-      this.request.on('error', reject)
-      this.request.end()
-    })
-  }
-
-  _parse (body) {
-    if (this.response.headers['content-type'] === 'application/json') {
-      return JSON.parse(body)
-    } else {
-      return body
-    }
-  }
-
-  _handleResponse () {
-    this._debugResponse()
-    if (this.response.statusCode >= 200 && this.response.statusCode < 300) {
-      this._resolve(this.options.raw ? this.response : this.response.body)
-    } else {
-      this._reject(new HTTPError(this))
-    }
-  }
-
-  _debugRequest () {
-    if (!this.debug) return
-    console.error(`--> ${this.method} ${this.url.href}`)
-    if (this.debug > 1) {
-      console.error(renderHeaders(this.request._headers))
-      if (this.body) console.error(`--- BODY\n${util.inspect(this.body)}\n---`)
-    }
-  }
-
-  _debugResponse () {
-    if (!this.debug) return
-    console.error(`<-- ${this.method} ${this.url.href}`)
-    if (this.debug > 1) {
-      console.error(renderHeaders(this.response.headers))
-      console.error(`--- BODY\n${util.inspect(this.response.body)}\n---`)
-    }
-  }
-
-  get _http () {
-    return this.url.protocol === 'https:'
-      ? require('https')
-      : require('http')
+    return Promise.resolve(options.requestMiddleware ? options.requestMiddleware(options) : options)
+    .then(options => performRequest(options))
+    .then(response => handleResponse(response))
   }
 
   get _userAgent () {
