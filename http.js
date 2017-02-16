@@ -62,6 +62,15 @@ function handleResponse (r) {
 }
 
 /**
+ * @typedef {Object} RequestOptions
+ * @property {Object.<string, string>} headers - request headers
+ * @property {(string|Object)} body - request body. Sets content-type to application/json and stringifies when object
+ * @property {boolean} raw - do not parse body, instead just return node request object
+ * @property {Function} requestMiddleware - called just before the request is made, returns a promise
+ * @property {Function} responseMiddleware - called after a request is made, returns a promise
+ */
+
+/**
  * Utility for simple HTTP calls
  * @class
  */
@@ -72,8 +81,9 @@ class HTTP {
 
   /**
    * make a simple http request
-   * @param url {string} - url or path to call
-   * @param options {object}
+   * @param {string} url - url or path to call
+   * @param {RequestOptions} options
+   * @returns {Promise}
    * @example
    * ```js
    * const http = require('http-call')
@@ -88,6 +98,19 @@ class HTTP {
     }))
   }
 
+  /**
+   * make a simple http request with initialized object
+   * use this for setting some defaults
+   * @param url {string} - url or path to call
+   * @param options {RequestOptions}
+   * @returns {Promise}
+   * @example
+   * ```js
+   * const HTTP = require('http-call')
+   * let client = new HTTP({headers: 'user-agent': 'my-unique-agent/1.0.0'})
+   * await client.get('https://google.com')
+   * ```
+   */
   get (url, options = {}) {
     return this._request(Object.assign({}, options, {
       method: 'GET',
@@ -115,7 +138,6 @@ class HTTP {
     const version = require('./package.json').version
     return `http-call/${version}`
   }
-
 }
 
 module.exports = HTTP
