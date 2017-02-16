@@ -107,7 +107,7 @@ class HTTP {
     options.protocol = u.protocol
 
     return Promise.resolve(options.requestMiddleware ? options.requestMiddleware(options) : options)
-    .then(options => performRequest(options))
+    .then(() => performRequest(options))
     .then(response => handleResponse(response))
   }
 
