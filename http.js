@@ -124,7 +124,8 @@ class HTTP {
     }, this.options, options)
 
     let u = url.parse(options.url)
-    options.host = u.host
+    u.protocol = u.protocol || options.protocol
+    options.host = u.host || options.host
     options.port = u.port || (u.protocol === 'https:' ? 443 : 80)
     options.path = u.path
     options.protocol = u.protocol
