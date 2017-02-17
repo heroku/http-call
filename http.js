@@ -23,6 +23,7 @@ function mergeOptions (...optionses) {
 class HTTPError extends Error {
   constructor (response, body) {
     super(`HTTP Error ${response.statusCode} for ${response.req.method} ${response.req._headers.host}${response.req.path}\n${util.inspect(body)}`)
+    this.statusCode = response.statusCode
   }
 }
 
