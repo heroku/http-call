@@ -56,7 +56,7 @@ function handleResponse (r) {
     if (r.response.statusCode >= 200 && r.response.statusCode < 300) {
       return r.body
     } else {
-      throw new HTTPError(r, r.body)
+      throw new HTTPError(r.response, r.body)
     }
   })
 }
