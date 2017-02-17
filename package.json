@@ -1,6 +1,6 @@
 {
   "name": "http-call",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "make http requests",
   "author": "Jeff Dickey @dickeyxxx",
   "bugs": "https://github.com/dickeyxxx/http-call/issues",
