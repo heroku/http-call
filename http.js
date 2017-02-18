@@ -22,7 +22,8 @@ function mergeOptions (...optionses) {
 
 class HTTPError extends Error {
   constructor (response, body) {
-    super(`HTTP Error ${response.statusCode} for ${response.req.method} ${response.req._headers.host}${response.req.path}\n${util.inspect(body)}`)
+    body = body ? `\n${util.inspect(body)}` : ''
+    super(`HTTP Error ${response.statusCode} for ${response.req.method} ${response.req._headers.host}${response.req.path}${body}`)
     this.statusCode = response.statusCode
   }
 }
@@ -57,7 +58,7 @@ function handleResponse (r) {
     if (r.response.statusCode >= 200 && r.response.statusCode < 300) {
       return r.body
     } else {
-      throw new HTTPError(r.response, r.body)
+      throw new HTTPError(r.response, r.options.raw ? null : r.body)
     }
   })
 }
