@@ -1,6 +1,6 @@
 import util from 'util'
 import uri from 'url'
-import pjson from './package.json'
+import pjson from '../package.json'
 
 function concat (stream) {
   return new Promise(resolve => {
@@ -40,6 +40,7 @@ class HTTP {
     return http.request()
   }
 
+  protocol = 'https:'
   headers = {
     'user-agent': `${pjson.name}/${pjson.version} node-${process.version}`
   }
@@ -47,11 +48,10 @@ class HTTP {
   constructor (url, ...options) {
     for (let o of options) this.addOptions(o)
     let u = uri.parse(url)
-    u.protocol = u.protocol || this.protocol
+    this.protocol = u.protocol || this.protocol
     this.host = u.host || this.host
-    this.port = u.port || (u.protocol === 'https:' ? 443 : 80)
+    this.port = u.port || this.port || (this.protocol === 'https:' ? 443 : 80)
     this.path = u.path
-    this.protocol = u.protocol
   }
 
   addOptions (options) {
@@ -62,11 +62,11 @@ class HTTP {
   }
 
   async request () {
-    let response = await this.performRequest()
-    if (response.statusCode >= 200 && response.statusCode < 300) {
+    this.response = await this.performRequest()
+    if (this.response.statusCode >= 200 && this.response.statusCode < 300) {
       // TODO: handle raw stream
-      return await this._parse(response)
-    } else throw new this.HTTPError(response, await this._parse(response))
+      return await this.parse(this.response)
+    } else throw new this.HTTPError(this, await this.parse(this.response))
   }
 
   get http () {
@@ -81,20 +81,20 @@ class HTTP {
     })
   }
 
-  _parse (response) {
+  parse (response) {
     return concat(response).then(body => {
       return response.headers['content-type'] === 'application/json'
         ? JSON.parse(body) : body
     })
   }
 
-  static HTTPError = class HTTPError extends Error {
-    constructor (response, body) {
+  HTTPError = class HTTPError extends Error {
+    constructor (http, body) {
       body = `\n${util.inspect(body)}`
-      super(`HTTP Error ${response.statusCode} for ${response.req.method} ${response.req._headers.host}${response.req.path}${body}`)
-      this.statusCode = response.statusCode
+      super(`HTTP Error ${http.response.statusCode} for ${http.method} ${http.url}${body}`)
+      this.statusCode = http.response.statusCode
     }
   }
 }
 
-module.exports = HTTP
+export default HTTP
