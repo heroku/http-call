@@ -1,65 +1,12 @@
-const util = require('util')
-const url = require('url')
+import util from 'util'
+import uri from 'url'
+import pjson from './package.json'
 
 function concat (stream) {
   return new Promise(resolve => {
     let strings = []
     stream.on('data', data => strings.push(data))
     stream.on('end', () => resolve(strings.join('')))
-  })
-}
-
-function mergeOptions (...optionses) {
-  let options = {headers: {}}
-  for (let o of optionses) {
-    for (let k of Object.keys(o)) {
-      if (k === 'headers') Object.assign(options.headers, o.headers)
-      else options[k] = o[k]
-    }
-  }
-  return options
-}
-
-class HTTPError extends Error {
-  constructor (response, body) {
-    body = body ? `\n${util.inspect(body)}` : ''
-    super(`HTTP Error ${response.statusCode} for ${response.req.method} ${response.req._headers.host}${response.req.path}${body}`)
-    this.statusCode = response.statusCode
-  }
-}
-
-function performRequest (options) {
-  let http = options.protocol === 'https:'
-    ? require('https')
-    : require('http')
-
-  return new Promise((resolve, reject) => {
-    let request = http.request(options, response => resolve({response, options}))
-    request.on('error', reject)
-    request.end()
-  })
-}
-
-function parse ({response, options}) {
-  if (options.raw) return Promise.resolve(response)
-  return concat(response).then(body => {
-    return response.headers['content-type'] === 'application/json'
-      ? JSON.parse(body)
-      : body
-  })
-}
-
-function handleResponse (r) {
-  return parse(r)
-  .then(body => {
-    r.body = body
-    return Promise.resolve(r.options.responseMiddleware ? r.options.responseMiddleware(r) : r)
-  }).then(() => {
-    if (r.response.statusCode >= 200 && r.response.statusCode < 300) {
-      return r.body
-    } else {
-      throw new HTTPError(r.response, r.options.raw ? null : r.body)
-    }
   })
 }
 
@@ -77,12 +24,8 @@ function handleResponse (r) {
  * @class
  */
 class HTTP {
-  constructor (options = {}) {
-    this.options = options
-  }
-
   /**
-   * make a simple http request
+   * make an http GET request
    * @param {string} url - url or path to call
    * @param {RequestOptions} options
    * @returns {Promise}
@@ -93,53 +36,65 @@ class HTTP {
    * ```
    */
   static get (url, options = {}) {
-    const http = new HTTP()
-    return http._request(Object.assign({}, options, {
-      method: 'GET',
-      url
-    }))
+    let http = new this(url, {method: 'GET'}, options)
+    return http.request()
   }
 
-  /**
-   * make a simple http request with initialized object
-   * use this for setting some defaults
-   * @param url {string} - url or path to call
-   * @param options {RequestOptions}
-   * @returns {Promise}
-   * @example
-   * ```js
-   * const HTTP = require('http-call')
-   * let client = new HTTP({headers: 'user-agent': 'my-unique-agent/1.0.0'})
-   * await client.get('https://google.com')
-   * ```
-   */
-  get (url, options = {}) {
-    return this._request(Object.assign({}, options, {
-      method: 'GET',
-      url
-    }))
+  headers = {
+    'user-agent': `${pjson.name}/${pjson.version} node-${process.version}`
   }
 
-  _request (options) {
-    options = mergeOptions({
-      headers: {'User-Agent': this._userAgent}
-    }, this.options, options)
-
-    let u = url.parse(options.url)
-    u.protocol = u.protocol || options.protocol
-    options.host = u.host || options.host
-    options.port = u.port || (u.protocol === 'https:' ? 443 : 80)
-    options.path = u.path
-    options.protocol = u.protocol
-
-    return Promise.resolve(options.requestMiddleware ? options.requestMiddleware(options) : options)
-    .then(() => performRequest(options))
-    .then(response => handleResponse(response))
+  constructor (url, ...options) {
+    for (let o of options) this.addOptions(o)
+    let u = uri.parse(url)
+    u.protocol = u.protocol || this.protocol
+    this.host = u.host || this.host
+    this.port = u.port || (u.protocol === 'https:' ? 443 : 80)
+    this.path = u.path
+    this.protocol = u.protocol
   }
 
-  get _userAgent () {
-    const version = require('./package.json').version
-    return `http-call/${version}`
+  addOptions (options) {
+    for (let k of Object.keys(options)) {
+      if (k !== 'headers') this[k] = options[k]
+      else Object.assign(this.headers, options.headers)
+    }
+  }
+
+  async request () {
+    let response = await this.performRequest()
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      // TODO: handle raw stream
+      return await this._parse(response)
+    } else throw new this.HTTPError(response, await this._parse(response))
+  }
+
+  get http () {
+    return this.protocol === 'https:' ? require('https') : require('http')
+  }
+
+  performRequest () {
+    return new Promise((resolve, reject) => {
+      let request = this.http.request(this, response => resolve(response))
+      request.on('error', reject)
+      request.end()
+    })
+  }
+
+  _parse (response) {
+    return concat(response).then(body => {
+      return response.headers['content-type'] === 'application/json'
+        ? JSON.parse(body)
+        : body
+    })
+  }
+
+  static HTTPError = class HTTPError extends Error {
+    constructor (response, body) {
+      body = `\n${util.inspect(body)}`
+      super(`HTTP Error ${response.statusCode} for ${response.req.method} ${response.req._headers.host}${response.req.path}${body}`)
+      this.statusCode = response.statusCode
+    }
   }
 }
 

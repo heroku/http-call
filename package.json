@@ -5,9 +5,12 @@
   "author": "Jeff Dickey @dickeyxxx",
   "bugs": "https://github.com/dickeyxxx/http-call/issues",
   "devDependencies": {
+    "babel-eslint": "7.1.1",
     "babel-jest": "18.0.0",
     "babel-polyfill": "6.23.0",
+    "babel-preset-es2015": "6.22.0",
     "babel-preset-stage-0": "6.22.0",
+    "bluebird": "3.4.7",
     "codecov": "1.0.1",
     "jest": "18.1.0",
     "jsdoc-to-markdown": "3.0.0",
@@ -33,5 +36,8 @@
     "doc": "jsdoc2md --template doc/template.hbs --files http.js > README.md",
     "test": "jest && standard",
     "version": "npm run doc && git add README.md"
+  },
+  "standard": {
+    "parser": "babel-eslint"
   }
 }
