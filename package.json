@@ -8,6 +8,7 @@
     "babel-jest": "18.0.0",
     "babel-polyfill": "6.23.0",
     "babel-preset-stage-0": "6.22.0",
+    "codecov": "1.0.1",
     "jest": "18.1.0",
     "jsdoc-to-markdown": "3.0.0",
     "nock": "9.0.6",
@@ -16,7 +17,9 @@
   },
   "homepage": "https://github.com/dickeyxxx/http-call",
   "jest": {
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "coverageDirectory": "./coverage/",
+    "collectCoverage": true
   },
   "keywords": [
     "http",
