@@ -1,0 +1,7 @@
+*.test.js
+.babelrc
+.npmignore
+coverage
+yarn.lock
+
+doc/template.hbs
