@@ -75,7 +75,7 @@ class HTTP {
 
   performRequest () {
     return new Promise((resolve, reject) => {
-      let request = this.http.request(this, response => resolve(response))
+      let request = this.http.request(this, resolve)
       request.on('error', reject)
       request.end()
     })
@@ -84,8 +84,7 @@ class HTTP {
   _parse (response) {
     return concat(response).then(body => {
       return response.headers['content-type'] === 'application/json'
-        ? JSON.parse(body)
-        : body
+        ? JSON.parse(body) : body
     })
   }
 
