@@ -1,41 +1,54 @@
-/* globals test expect */
-// const util = require('util')
-const http = require('.')
-const nock = require('nock')
+/* globals
+  afterEach
+  beforeEach
+  expect
+  jest
+  test
+*/
 
-nock('https://api.heroku.com')
+import http from './http'
+import nock from 'nock'
+import pjson from './package.json'
+
+nock.disableNetConnect()
+
+let api
+
+beforeEach(() => {
+  api = nock('https://api.dickeyxxx.com')
+})
+
+afterEach(() => {
+  api.done()
+})
 
 test('makes a GET request', async () => {
-  // function renderHeaders (headers) {
-  //   return Object.keys(headers).map(key => {
-  //     let value = key.toUpperCase() === 'AUTHORIZATION' ? 'REDACTED' : headers[key]
-  //     return '    ' + key + '=' + value
-  //   }).join('\n')
-  // }
+  api.get('/')
+    .reply(200, {message: 'ok'})
+  let rsp = await http.get('https://api.dickeyxxx.com')
+  expect(rsp).toEqual({message: 'ok'})
+})
 
-  // function debugRequest (options) {
-  //   console.log(`--> ${options.method} ${options.host}${options.path}`)
-  //   console.log(renderHeaders(options.headers))
-  //   if (body) console.log(`--- BODY\n${util.inspect(body)}\n---`)
-  //   return Promise.resolve(options)
-  // }
+test('sets user-agent header', async () => {
+  api.get('/')
+    .matchHeader('user-agent', `http-call/${pjson.version} node-${process.version}`)
+    .reply(200, {message: 'ok'})
+  await http.get('https://api.dickeyxxx.com')
+})
 
-  // function debugResponse ({response, body}) {
-  //   let url = `${response.req._headers.host}${response.req.path}`
-  //   console.log(`<-- ${response.req.method} ${url} ${response.statusCode}`)
-  //   console.log(renderHeaders(response.headers))
-  //   console.log(`--- BODY\n${util.inspect(body)}\n---`)
-  // }
+test('sets custom headers', async () => {
+  api.get('/')
+    .matchHeader('foo', 'bar')
+    .reply(200)
+  let headers = {foo: 'bar'}
+  await http.get('https://api.dickeyxxx.com', {headers})
+})
 
-  let rsp = await http.get('https://api.heroku.com', {
-    debug: 2,
-    // requestMiddleware: debugRequest,
-    // responseMiddleware: debugResponse,
-    headers: {
-      'Accept': 'application/vnd.heroku+json; version=3'
-    }
-  })
-  expect(rsp).toEqual({
-    links: [ { href: 'https://api.heroku.com/schema', rel: 'schema' } ]
-  })
+test.skip('uses requestMiddleware', async () => {
+  api.get('/')
+    .reply(200, {message: 'ok'})
+
+  let requestMiddleware = jest.fn()
+  await http.get('https://api.dickeyxxx.com', {requestMiddleware})
+  expect(requestMiddleware.mock.calls.length).toBe(1)
 })
