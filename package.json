@@ -30,7 +30,7 @@
     "rest"
   ],
   "license": "ISC",
-  "main": "http.js",
+  "main": "lib/http.js",
   "repository": "dickeyxxx/http-call",
   "scripts": {
     "doc": "jsdoc2md --template doc/template.hbs --files http.js > README.md",
