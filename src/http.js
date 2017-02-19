@@ -73,6 +73,10 @@ class HTTP {
     return this.protocol === 'https:' ? require('https') : require('http')
   }
 
+  get url () {
+    return `${this.protocol}//${this.host}${this.path}`
+  }
+
   performRequest () {
     return new Promise((resolve, reject) => {
       let request = this.http.request(this, resolve)

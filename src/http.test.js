@@ -60,7 +60,13 @@ test('sets custom headers', async () => {
 })
 
 test('displays 404 error', async () => {
+  expect.assertions(1)
   api.get('/')
     .reply(404, 'oops! not found')
-  await HTTP.get('https://api.dickeyxxx.com')
+  try {
+    await HTTP.get('https://api.dickeyxxx.com')
+  } catch (err) {
+    expect(err.message).toEqual(`HTTP Error 404 for GET https://api.dickeyxxx.com:443/
+'oops! not found'`)
+  }
 })
