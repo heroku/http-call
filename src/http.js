@@ -1,6 +1,10 @@
+// @flow
+import 'babel-polyfill'
 import util from 'util'
 import uri from 'url'
 import pjson from '../package.json'
+import http from 'http'
+import https from 'https'
 
 function concat (stream) {
   return new Promise(resolve => {
@@ -15,9 +19,10 @@ function concat (stream) {
  * @property {Object.<string, string>} headers - request headers
  * @property {(string|Object)} body - request body. Sets content-type to application/json and stringifies when object
  * @property {boolean} raw - do not parse body, instead just return node request object
- * @property {Function} requestMiddleware - called just before the request is made, returns a promise
- * @property {Function} responseMiddleware - called after a request is made, returns a promise
  */
+type RequestOptions = {
+  headers?: {[key: string]: string}
+}
 
 /**
  * Utility for simple HTTP calls
@@ -40,25 +45,29 @@ class HTTP {
     return http.request()
   }
 
+  response: http$IncomingMessage
+  method = 'GET'
+  host = 'localhost'
+  port = 0
   protocol = 'https:'
+  path = '/'
   headers = {
     'user-agent': `${pjson.name}/${pjson.version} node-${process.version}`
   }
 
-  constructor (url, ...options) {
+  constructor (url: string, ...options: RequestOptions[]) {
     for (let o of options) this.addOptions(o)
     let u = uri.parse(url)
     this.protocol = u.protocol || this.protocol
     this.host = u.host || this.host
     this.port = u.port || this.port || (this.protocol === 'https:' ? 443 : 80)
-    this.path = u.path
+    this.path = u.path || this.path
   }
 
-  addOptions (options) {
-    for (let k of Object.keys(options)) {
-      if (k !== 'headers') this[k] = options[k]
-      else Object.assign(this.headers, options.headers)
-    }
+  addOptions (options: RequestOptions) {
+    let headers = Object.assign(this.headers, options.headers)
+    Object.assign(this, options)
+    this.headers = headers
   }
 
   async request () {
@@ -69,11 +78,11 @@ class HTTP {
     } else throw new this.HTTPError(this, await this.parse(this.response))
   }
 
-  get http () {
-    return this.protocol === 'https:' ? require('https') : require('http')
+  get http (): (typeof http | typeof https) {
+    return this.protocol === 'https:' ? https : http
   }
 
-  get url () {
+  get url (): string {
     return `${this.protocol}//${this.host}${this.path}`
   }
 
@@ -85,7 +94,7 @@ class HTTP {
     })
   }
 
-  parse (response) {
+  parse (response: http$IncomingMessage): Promise<JSON | string> {
     return concat(response).then(body => {
       return response.headers['content-type'] === 'application/json'
         ? JSON.parse(body) : body
@@ -93,7 +102,9 @@ class HTTP {
   }
 
   HTTPError = class HTTPError extends Error {
-    constructor (http, body) {
+    statusCode: number
+
+    constructor (http: HTTP, body: JSON | string) {
       body = `\n${util.inspect(body)}`
       super(`HTTP Error ${http.response.statusCode} for ${http.method} ${http.url}${body}`)
       this.statusCode = http.response.statusCode
