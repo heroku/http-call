@@ -40,15 +40,18 @@
   "main": "lib/http.js",
   "repository": "dickeyxxx/http-call",
   "scripts": {
-    "doc": "jsdoc2md --template doc/template.hbs --files http.js > README.md",
-    "clean": "rimraf lib",
     "build": "babel src -d lib --ignore '*.test.js' --source-maps inline",
+    "clean": "rimraf lib",
     "copy-flow": "flow-copy-source -v -i '*.test.js' src lib",
+    "doc": "jsdoc2md --template doc/template.hbs --files http.js > README.md",
     "prepare": "npm run clean && npm run build && npm run copy-flow",
     "test": "jest && flow && standard",
     "version": "npm run doc && git add README.md"
   },
   "standard": {
-    "parser": "babel-eslint"
+    "parser": "babel-eslint",
+    "ignore": [
+      "flow-typed"
+    ]
   }
 }

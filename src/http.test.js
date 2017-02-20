@@ -1,3 +1,5 @@
+// @flow
+
 /* globals
   afterEach
   beforeEach
