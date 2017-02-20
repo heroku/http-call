@@ -3,6 +3,7 @@
 .npmignore
 coverage
 doc/template.hbs
+doc/jsdoc2md.json
 flow-typed
 src
 yarn.lock
