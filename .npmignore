@@ -1,7 +1,8 @@
-*.test.js
 .babelrc
+.flowconfig
 .npmignore
 coverage
-yarn.lock
-
 doc/template.hbs
+flow-typed
+src
+yarn.lock
