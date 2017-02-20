@@ -4,7 +4,7 @@
 [include]
 
 [libs]
-flow-types
+flow-typed
 
 [options]
 emoji=true
