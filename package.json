@@ -17,7 +17,7 @@
     "codecov": "1.0.1",
     "flow-bin": "0.39.0",
     "flow-copy-source": "1.1.0",
-    "flow-types": "1.0.0",
+    "flow-typed": "2.0.0",
     "jest": "18.1.0",
     "jsdoc-babel": "0.3.0",
     "jsdoc-to-markdown": "3.0.0",
