@@ -5,10 +5,10 @@
 <dd></dd>
 </dl>
 
-## Functions
+## Members
 
 <dl>
-<dt><a href="#value">value(url, options)</a> ⇒ <code>Promise</code></dt>
+<dt><a href="#value">value</a> ⇒ <code>Promise</code></dt>
 <dd><p>make an http GET request</p>
 </dd>
 </dl>
@@ -31,10 +31,10 @@ Utility for simple HTTP calls
 
 <a name="value"></a>
 
-## value(url, options) ⇒ <code>Promise</code>
+## value ⇒ <code>Promise</code>
 make an http GET request
 
-**Kind**: global function  
+**Kind**: global variable  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -55,6 +55,6 @@ await http.get('https://google.com')
 | Name | Type | Description |
 | --- | --- | --- |
 | headers | <code>Object.&lt;string, string&gt;</code> | request headers |
-| body | <code>string</code> &#124; <code>Object</code> | request body. Sets content-type to application/json and stringifies when object |
-| raw | <code>boolean</code> | do not parse body, instead just return node request object |
+| method | <code>string</code> | request method (GET/POST/etc) |
+| body | <code>string</code> | request body. Sets content-type to application/json and stringifies when object |
 
