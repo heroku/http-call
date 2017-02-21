@@ -2,7 +2,6 @@
 /* global
   http$IncomingMessage
 */
-import 'babel-polyfill'
 import util from 'util'
 import uri from 'url'
 import pjson from '../package.json'
