@@ -103,7 +103,7 @@ class HTTP {
   async request () {
     this.response = await this.performRequest()
     if (this.response.statusCode >= 200 && this.response.statusCode < 300) {
-      if (!this.raw) this.body = this.parse(this.response)
+      if (!this.raw) this.body = await this.parse(this.response)
     } else throw new this.HTTPError(this, await this.parse(this.response))
   }
 
