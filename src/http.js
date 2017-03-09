@@ -1,7 +1,5 @@
 // @flow
-/* global
-  http$IncomingMessage
-*/
+
 import util from 'util'
 import uri from 'url'
 import pjson from '../package.json'
@@ -29,7 +27,7 @@ type RequestOptions = {
   headers?: Headers
 }
 
-type Json = | string | number | boolean | null | JsonObject | JsonArray
+type Json = | string | number | boolean | null | JsonObject | JsonArray // eslint-disable-line
 type JsonObject = { [key:string]: Json }
 type JsonArray = Json[]
 
