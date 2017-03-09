@@ -1,9 +1,11 @@
 .babelrc
 .flowconfig
 .npmignore
+appveyor.yml
 coverage
-doc/template.hbs
 doc/jsdoc2md.json
+doc/template.hbs
 flow-typed
 src
+yarn-error.log
 yarn.lock
