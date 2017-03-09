@@ -1,13 +1,5 @@
 // @flow
 
-/* globals
-  afterEach
-  beforeEach
-  describe
-  expect
-  test
-*/
-
 import HTTP from './http'
 import nock from 'nock'
 import pjson from '../package.json'
