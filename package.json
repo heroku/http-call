@@ -5,14 +5,14 @@
   "author": "Jeff Dickey @dickeyxxx",
   "bugs": "https://github.com/dickeyxxx/http-call/issues",
   "devDependencies": {
-    "babel-cli": "6.23.0",
-    "babel-core": "6.23.1",
+    "babel-cli": "^6.24.0",
+    "babel-core": "^6.24.0",
     "babel-eslint": "7.1.1",
     "babel-jest": "^19.0.0",
     "babel-plugin-transform-class-properties": "^6.23.0",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.23.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.24.0",
     "babel-plugin-transform-flow-strip-types": "6.22.0",
-    "codecov": "1.0.1",
+    "codecov": "^2.0.1",
     "flow-bin": "^0.41.0",
     "flow-copy-source": "1.1.0",
     "flow-typed": "2.0.0",
@@ -20,7 +20,6 @@
     "jsdoc-babel": "0.3.0",
     "jsdoc-to-markdown": "3.0.0",
     "nock": "^9.0.9",
-    "np": "2.12.0",
     "rimraf": "^2.6.1",
     "standard": "^9.0.1"
   },
@@ -42,7 +41,7 @@
   "main": "lib/http.js",
   "repository": "dickeyxxx/http-call",
   "scripts": {
-    "build": "babel src -d lib --ignore '*.test.js' --source-maps inline",
+    "build": "babel src -d lib --ignore '*.test.js'",
     "clean": "rimraf lib",
     "copy-flow": "flow-copy-source -v -i '*.test.js' src lib",
     "doc": "jsdoc2md -c doc/jsdoc2md.json --files src/http.js > README.md",
@@ -57,7 +56,9 @@
       "jest"
     ],
     "globals": [
-      "http$IncomingMessage"
+      "http$IncomingMessage",
+      "$Diff",
+      "$Shape"
     ],
     "ignore": [
       "flow-typed"
