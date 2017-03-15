@@ -16,6 +16,7 @@ function concat (stream) {
 
 type Method = | "GET" | "POST" | "PATCH" | "PUT" | "DELETE"
 type Headers = {[key: string]: string}
+type Protocol = | 'https:' | 'http:'
 
 /**
  * @typedef {Object} RequestOptions
@@ -23,8 +24,12 @@ type Headers = {[key: string]: string}
  * @property {string} method - request method (GET/POST/etc)
  * @property {(string)} body - request body. Sets content-type to application/json and stringifies when object
  */
-type RequestOptions = {
-  headers?: Headers
+export type RequestOptions = {
+  method: Method,
+  headers: Headers,
+  raw?: boolean,
+  host?: string,
+  protocol?: Protocol
 }
 
 type Json = | string | number | boolean | null | JsonObject | JsonArray // eslint-disable-line
@@ -35,7 +40,7 @@ type JsonArray = Json[]
  * Utility for simple HTTP calls
  * @class
  */
-class HTTP {
+export default class HTTP {
   /**
    * make an http GET request
    * @param {string} url - url or path to call
@@ -47,8 +52,9 @@ class HTTP {
    * await http.get('https://google.com')
    * ```
    */
-  static async get (url, options = {}) {
-    let http = new this(url, {method: 'GET'}, options)
+  static async get (url, options: $Shape<RequestOptions> = {}) {
+    options.method = 'GET'
+    let http = new this(url, options)
     await http.request()
     return http.body
   }
@@ -65,8 +71,10 @@ class HTTP {
    * rsp.on('data', console.log)
    * ```
    */
-  static async stream (url, options = {}) {
-    let http = new this(url, {method: 'GET', raw: true}, options)
+  static async stream (url: string, options: $Shape<RequestOptions> = {}) {
+    options.method = 'GET'
+    options.raw = true
+    let http = new this(url, options)
     await http.request()
     return http.response
   }
@@ -83,19 +91,16 @@ class HTTP {
   response: http$IncomingMessage
   body: Json
 
-  constructor (url: string, ...options: RequestOptions[]) {
-    for (let o of options) this.addOptions(o)
+  constructor (url: string, options: $Shape<RequestOptions> = {}) {
+    if (!url) throw new Error('no url provided')
+    let headers = Object.assign(this.headers, options.headers)
+    Object.assign(this, options)
+    this.headers = headers
     let u = uri.parse(url)
     this.protocol = u.protocol || this.protocol
     this.host = u.host || this.host
     this.port = u.port || this.port || (this.protocol === 'https:' ? 443 : 80)
     this.path = u.path || this.path
-  }
-
-  addOptions (options: RequestOptions) {
-    let headers = Object.assign(this.headers, options.headers)
-    Object.assign(this, options)
-    this.headers = headers
   }
 
   async request () {
@@ -137,5 +142,3 @@ class HTTP {
     }
   }
 }
-
-export default HTTP
