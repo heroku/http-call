@@ -60,6 +60,24 @@ export default class HTTP {
   }
 
   /**
+   * make an http POST request
+   * @param {string} url - url or path to call
+   * @param {RequestOptions} options
+   * @returns {Promise}
+   * @example
+   * ```js
+   * const http = require('http-call')
+   * await http.post('https://google.com')
+   * ```
+   */
+  static async post (url, options: $Shape<RequestOptions> = {}) {
+    options.method = 'POST'
+    let http = new this(url, options)
+    await http.request()
+    return http.body
+  }
+
+  /**
    * make a streaming request
    * @param {string} url - url or path to call
    * @param {RequestOptions} options

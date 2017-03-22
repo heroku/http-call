@@ -1,2 +1,4 @@
 coverage
 lib
+.idea
+node_modules
