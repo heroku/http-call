@@ -18,6 +18,9 @@ function concat (stream) {
 type Method = | "GET" | "POST" | "PATCH" | "PUT" | "DELETE"
 type Headers = {[key: string]: string}
 type Protocol = | 'https:' | 'http:'
+type Json = | string | number | boolean | null | JsonObject | JsonArray // eslint-disable-line
+type JsonObject = { [key:string]: Json }
+type JsonArray = Json[]
 
 /**
  * @typedef {Object} RequestOptions
@@ -31,12 +34,8 @@ export type RequestOptions = {
   raw?: boolean,
   host?: string,
   protocol?: Protocol,
-  body?: Json
+  body?: any
 }
-
-type Json = | string | number | boolean | null | JsonObject | JsonArray // eslint-disable-line
-type JsonObject = { [key:string]: Json }
-type JsonArray = Json[]
 
 /**
  * Utility for simple HTTP calls
@@ -74,12 +73,14 @@ export default class HTTP {
    */
   static async post (url, options: $Shape<RequestOptions> = {}) {
     options.method = 'POST'
-    let postBody = querystring.stringify(options.body)
+    let optionsBody = {}
+    Object.assign(optionsBody, options.body)
+    let postBody = querystring.stringify(optionsBody)
     delete options.body
     let http = new this(url, options)
     http.postBody = postBody
     http.headers['Content-Type'] = 'application/x-www-form-urlencoded'
-    http.headers['Content-Length'] = Buffer.byteLength(postBody)
+    http.headers['Content-Length'] = Buffer.byteLength(postBody).toString()
     await http.request()
     return http.body
   }
@@ -115,6 +116,7 @@ export default class HTTP {
   }
   response: http$IncomingMessage
   postBody: Json
+  body: any
 
   constructor (url: string, options: $Shape<RequestOptions> = {}) {
     if (!url) throw new Error('no url provided')
@@ -147,7 +149,7 @@ export default class HTTP {
     return new Promise((resolve, reject) => {
       let request = this.http.request(this, resolve)
       request.on('error', reject)
-      if(this.method === 'POST') request.write(this.postBody)
+      if (this.method === 'POST') request.write(this.postBody)
       request.end()
     })
   }
