@@ -75,48 +75,11 @@ describe('HTTP.post()', () => {
     let rsp = await HTTP.post('https://api.dickeyxxx.com')
     expect(rsp).toEqual({message: 'ok'})
   })
-
-  test('makes a http POST request', async () => {
-    api = nock('http://api.dickeyxxx.com')
-    api.post('/')
+  test('supports a body', async () => {
+    api.post('/', { 'foo': 'bar' })
       .reply(200, {message: 'ok'})
-    let rsp = await HTTP.post('http://api.dickeyxxx.com')
+    let rsp = await HTTP.post('https://api.dickeyxxx.com', { body: { 'foo': 'bar' }})
     expect(rsp).toEqual({message: 'ok'})
-  })
-
-  test('can default host by subclassing', async () => {
-    class MyHTTP extends HTTP {host = 'api.dickeyxxx.com'}
-    api.post('/')
-      .reply(200, {message: 'ok'})
-    let rsp = await MyHTTP.post('/')
-    expect(rsp).toEqual({message: 'ok'})
-  })
-
-  test('sets user-agent header', async () => {
-    api.post('/')
-      .matchHeader('user-agent', `http-call/${pjson.version} node-${process.version}`)
-      .reply(200, {message: 'ok'})
-    await HTTP.post('https://api.dickeyxxx.com')
-  })
-
-  test('sets custom headers', async () => {
-    api.post('/')
-      .matchHeader('foo', 'bar')
-      .reply(200)
-    let headers = {foo: 'bar'}
-    await HTTP.post('https://api.dickeyxxx.com', {headers})
-  })
-
-  test('displays 404 error', async () => {
-    expect.assertions(1)
-    api.post('/')
-      .reply(404, 'oops! not found')
-    try {
-      await HTTP.post('https://api.dickeyxxx.com')
-    } catch (err) {
-      expect(err.message).toEqual(`HTTP Error 404 for POST https://api.dickeyxxx.com:443/
-'oops! not found'`)
-    }
   })
 
 })

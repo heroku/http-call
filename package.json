@@ -46,7 +46,7 @@
     "copy-flow": "flow-copy-source -v -i '*.test.js' src lib",
     "doc": "jsdoc2md -c doc/jsdoc2md.json --files src/http.js > README.md",
     "prepare": "npm run clean && npm run build && npm run copy-flow",
-    "test": "jest --watch && flow && standard",
+    "test": "jest && flow && standard",
     "version": "npm run doc && git add README.md",
     "watch": "babel --watch src -d lib --ignore '*.test.js'"
   },

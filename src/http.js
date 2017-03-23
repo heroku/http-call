@@ -5,6 +5,7 @@ import uri from 'url'
 import pjson from '../package.json'
 import http from 'http'
 import https from 'https'
+import querystring from 'querystring'
 
 function concat (stream) {
   return new Promise(resolve => {
@@ -29,7 +30,8 @@ export type RequestOptions = {
   headers: Headers,
   raw?: boolean,
   host?: string,
-  protocol?: Protocol
+  protocol?: Protocol,
+  body?: Json
 }
 
 type Json = | string | number | boolean | null | JsonObject | JsonArray // eslint-disable-line
@@ -72,7 +74,12 @@ export default class HTTP {
    */
   static async post (url, options: $Shape<RequestOptions> = {}) {
     options.method = 'POST'
+    let postBody = querystring.stringify(options.body)
+    delete options.body
     let http = new this(url, options)
+    http.postBody = postBody
+    http.headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    http.headers['Content-Length'] = Buffer.byteLength(postBody)
     await http.request()
     return http.body
   }
@@ -107,7 +114,7 @@ export default class HTTP {
     'user-agent': `${pjson.name}/${pjson.version} node-${process.version}`
   }
   response: http$IncomingMessage
-  body: Json
+  postBody: Json
 
   constructor (url: string, options: $Shape<RequestOptions> = {}) {
     if (!url) throw new Error('no url provided')
@@ -140,6 +147,7 @@ export default class HTTP {
     return new Promise((resolve, reject) => {
       let request = this.http.request(this, resolve)
       request.on('error', reject)
+      if(this.method === 'POST') request.write(this.postBody)
       request.end()
     })
   }
