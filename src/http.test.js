@@ -70,18 +70,11 @@ describe('HTTP.get()', () => {
 
 describe('HTTP.post()', () => {
   test('makes a POST request', async () => {
-    api.post('/')
+    api.post('/', {'foo': 'bar'})
       .reply(200, {message: 'ok'})
-    let rsp = await HTTP.post('https://api.dickeyxxx.com')
+    let rsp = await HTTP.post('https://api.dickeyxxx.com', {body: {'foo': 'bar'}})
     expect(rsp).toEqual({message: 'ok'})
   })
-  test('supports a body', async () => {
-    api.post('/', { 'foo': 'bar' })
-      .reply(200, {message: 'ok'})
-    let rsp = await HTTP.post('https://api.dickeyxxx.com', { body: { 'foo': 'bar' }})
-    expect(rsp).toEqual({message: 'ok'})
-  })
-
 })
 describe('HTTP.stream()', () => {
   test('streams a response', async done => {
