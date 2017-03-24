@@ -5,7 +5,6 @@ import uri from 'url'
 import pjson from '../package.json'
 import http from 'http'
 import https from 'https'
-import querystring from 'querystring'
 
 function concat (stream) {
   return new Promise(resolve => {
@@ -73,16 +72,23 @@ export default class HTTP {
    */
   static async post (url, options: $Shape<RequestOptions> = {}) {
     options.method = 'POST'
-    let optionsBody = {}
-    Object.assign(optionsBody, options.body)
-    let postBody = querystring.stringify(optionsBody)
-    delete options.body
     let http = new this(url, options)
-    http.postBody = postBody
-    http.headers['Content-Type'] = 'application/x-www-form-urlencoded'
-    http.headers['Content-Length'] = Buffer.byteLength(postBody).toString()
+    if (options.body) this.parseBody(http)
     await http.request()
     return http.body
+  }
+
+  static parseBody (http: HTTP) {
+    let optionsBody = {}
+    Object.assign(optionsBody, http.body)
+    http.headers['Content-Length'] = Buffer.byteLength(JSON.stringify(optionsBody)).toString()
+    if (!http.headers['Content-Type']) {
+      http.headers['Content-Type'] = 'application/json'
+      http.requestBody = JSON.stringify(optionsBody)
+    } else {
+      http.requestBody = optionsBody
+    }
+    http.body = undefined
   }
 
   /**
@@ -115,7 +121,7 @@ export default class HTTP {
     'user-agent': `${pjson.name}/${pjson.version} node-${process.version}`
   }
   response: http$IncomingMessage
-  postBody: Json
+  requestBody: any
   body: any
 
   constructor (url: string, options: $Shape<RequestOptions> = {}) {
@@ -149,7 +155,7 @@ export default class HTTP {
     return new Promise((resolve, reject) => {
       let request = this.http.request(this, resolve)
       request.on('error', reject)
-      if (this.method === 'POST') request.write(this.postBody)
+      if (this.method === 'POST') request.write(this.requestBody)
       request.end()
     })
   }
