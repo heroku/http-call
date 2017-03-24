@@ -75,6 +75,52 @@ describe('HTTP.post()', () => {
     let rsp = await HTTP.post('https://api.dickeyxxx.com', {body: {'foo': 'bar'}})
     expect(rsp).toEqual({message: 'ok'})
   })
+  test('does not include a body if no body is passed in', async () => {
+    api.post('/')
+      .reply(200, {message: 'ok'})
+    let rsp = await HTTP.post('https://api.dickeyxxx.com')
+    expect(rsp).toEqual({message: 'ok'})
+  })
+})
+describe('HTTP.parseBody()', () => {
+  let body
+  let http
+  beforeEach(() => {
+    body = {
+      'karate': 'chop',
+      'judo': 'throw',
+      'taewkondo': 'kick',
+      'jujitsu': 'strangle'
+    }
+    http = new HTTP('www.duckduckgo.com', { 'body': body })
+  })
+  it('sets the Content-Length', () => {
+    HTTP.parseBody(http)
+    expect(http.headers['Content-Length']).toEqual(Buffer.byteLength(JSON.stringify(body)).toString())
+  })
+  it('sets the Content-Type to JSON', () => {
+    HTTP.parseBody(http)
+    expect(http.headers['Content-Type']).toEqual('application/json')
+  })
+  it('does not set the Content Type if it already exists', () => {
+    let options = {
+      'headers': {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      'body': body
+    }
+    http = new HTTP('www.duckduckgo.com', options)
+    HTTP.parseBody(http)
+    expect(http.headers['Content-Type']).toEqual(options.headers['Content-Type'])
+  })
+  it('resets the value for http.body object', () => {
+    HTTP.parseBody(http)
+    expect(http.body).toBe(undefined)
+  })
+  it('sets the requestBody to the body contents', () => {
+    HTTP.parseBody(http)
+    expect(http.requestBody).toBe(JSON.stringify(body))
+  })
 })
 describe('HTTP.stream()', () => {
   test('streams a response', async done => {
