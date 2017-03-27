@@ -3,6 +3,7 @@
 import HTTP from './http'
 import nock from 'nock'
 import pjson from '../package.json'
+import querystring from 'querystring'
 
 nock.disableNetConnect()
 
@@ -92,14 +93,12 @@ describe('HTTP.parseBody()', () => {
       'taewkondo': 'kick',
       'jujitsu': 'strangle'
     }
-    http = new HTTP('www.duckduckgo.com', { 'body': body })
+    http = new HTTP('www.duckduckgo.com', {'body': body})
   })
   it('sets the Content-Length', () => {
-    HTTP.parseBody(http)
     expect(http.headers['Content-Length']).toEqual(Buffer.byteLength(JSON.stringify(body)).toString())
   })
-  it('sets the Content-Type to JSON', () => {
-    HTTP.parseBody(http)
+  it('sets the Content-Type to JSON when Content-Type is unspecificed', () => {
     expect(http.headers['Content-Type']).toEqual('application/json')
   })
   it('does not set the Content Type if it already exists', () => {
@@ -110,15 +109,23 @@ describe('HTTP.parseBody()', () => {
       'body': body
     }
     http = new HTTP('www.duckduckgo.com', options)
-    HTTP.parseBody(http)
     expect(http.headers['Content-Type']).toEqual(options.headers['Content-Type'])
   })
+  it('querystring stringifies instead of JSON stringifies when the contenttype is not JSON', () => {
+    const options = {
+      'headers': {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      'body': body
+    }
+    http = new HTTP('www.duckduckgo.com', options)
+    const contentLength = Buffer.byteLength(querystring.stringify(body)).toString()
+    expect(http.headers['Content-Length']).toEqual(contentLength)
+  })
   it('resets the value for http.body object', () => {
-    HTTP.parseBody(http)
     expect(http.body).toBe(undefined)
   })
   it('sets the requestBody to the body contents', () => {
-    HTTP.parseBody(http)
     expect(http.requestBody).toBe(JSON.stringify(body))
   })
 })
