@@ -106,21 +106,10 @@ describe('HTTP.parseBody()', () => {
       'headers': {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      'body': body
+      'body': querystring.stringify(body)
     }
     http = new HTTP('www.duckduckgo.com', options)
     expect(http.headers['Content-Type']).toEqual(options.headers['Content-Type'])
-  })
-  it('querystring stringifies instead of JSON stringifies when the contenttype is not JSON', () => {
-    const options = {
-      'headers': {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      'body': body
-    }
-    http = new HTTP('www.duckduckgo.com', options)
-    const contentLength = Buffer.byteLength(querystring.stringify(body)).toString()
-    expect(http.headers['Content-Length']).toEqual(contentLength)
   })
   it('resets the value for http.body object', () => {
     expect(http.body).toBe(undefined)
