@@ -82,6 +82,23 @@ describe('HTTP.post()', () => {
     let rsp = await HTTP.post('https://api.dickeyxxx.com')
     expect(rsp).toEqual({message: 'ok'})
   })
+  test.only('faithfully passes custom-encoded content-types', async () => {
+    let body = {
+      'karate': 'chop',
+      'judo': 'throw',
+      'taewkondo': 'kick',
+      'jujitsu': 'strangle'
+    }
+    let options = {
+      'headers': {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      'body': querystring.stringify(body)
+    }
+    api.post('/', options)
+    let rsp = await HTTP.post('https://api.dickeyxxx.com/', options)
+    expect(rsp).toEqual({message: 'ok'})
+  })
 })
 describe('HTTP.parseBody()', () => {
   let body
