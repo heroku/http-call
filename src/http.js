@@ -5,7 +5,6 @@ import uri from 'url'
 import pjson from '../package.json'
 import http from 'http'
 import https from 'https'
-import querystring from 'querystring'
 
 function concat (stream) {
   return new Promise(resolve => {
@@ -81,7 +80,7 @@ export default class HTTP {
       http.requestBody = JSON.stringify(http.body)
       http.headers['Content-Length'] = Buffer.byteLength(http.requestBody).toString()
     } else {
-      http.requestBody = querystring.stringify(http.body)
+      http.requestBody = http.body
       http.headers['Content-Length'] = Buffer.byteLength(http.requestBody).toString()
     }
     http.body = undefined
