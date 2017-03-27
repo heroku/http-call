@@ -5,6 +5,7 @@ import uri from 'url'
 import pjson from '../package.json'
 import http from 'http'
 import https from 'https'
+import querystring from 'querystring'
 
 function concat (stream) {
   return new Promise(resolve => {
@@ -14,12 +15,9 @@ function concat (stream) {
   })
 }
 
-type Method = | "GET" | "POST" | "PATCH" | "PUT" | "DELETE"
-type Headers = {[key: string]: string}
+type Method = | 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
+type Headers = { [key: string]: string }
 type Protocol = | 'https:' | 'http:'
-type Json = | string | number | boolean | null | JsonObject | JsonArray // eslint-disable-line
-type JsonObject = { [key:string]: Json }
-type JsonArray = Json[]
 
 /**
  * @typedef {Object} RequestOptions
@@ -73,20 +71,18 @@ export default class HTTP {
   static async post (url, options: $Shape<RequestOptions> = {}) {
     options.method = 'POST'
     let http = new this(url, options)
-    if (options.body) this.parseBody(http)
     await http.request()
     return http.body
   }
 
   static parseBody (http: HTTP) {
-    let optionsBody = {}
-    Object.assign(optionsBody, http.body)
-    http.headers['Content-Length'] = Buffer.byteLength(JSON.stringify(optionsBody)).toString()
-    if (!http.headers['Content-Type']) {
+    if (!http.headers['Content-Type'] || http.headers['Content-Type'] === 'application/json') {
       http.headers['Content-Type'] = 'application/json'
-      http.requestBody = JSON.stringify(optionsBody)
+      http.requestBody = JSON.stringify(http.body)
+      http.headers['Content-Length'] = Buffer.byteLength(http.requestBody).toString()
     } else {
-      http.requestBody = optionsBody
+      http.requestBody = querystring.stringify(http.body)
+      http.headers['Content-Length'] = Buffer.byteLength(http.requestBody).toString()
     }
     http.body = undefined
   }
@@ -134,6 +130,7 @@ export default class HTTP {
     this.host = u.host || this.host
     this.port = u.port || this.port || (this.protocol === 'https:' ? 443 : 80)
     this.path = u.path || this.path
+    if (options.body) HTTP.parseBody(this)
   }
 
   async request () {
@@ -155,7 +152,7 @@ export default class HTTP {
     return new Promise((resolve, reject) => {
       let request = this.http.request(this, resolve)
       request.on('error', reject)
-      if (this.method === 'POST') request.write(this.requestBody)
+      if (this.requestBody) request.write(this.requestBody)
       request.end()
     })
   }
@@ -169,7 +166,7 @@ export default class HTTP {
   HTTPError = class HTTPError extends Error {
     statusCode: number
 
-    constructor (http: HTTP, body: Json) {
+    constructor (http: HTTP, body: any) {
       body = `\n${util.inspect(body)}`
       super(`HTTP Error ${http.response.statusCode} for ${http.method} ${http.url}${body}`)
       this.statusCode = http.response.statusCode
