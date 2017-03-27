@@ -82,20 +82,31 @@ describe('HTTP.post()', () => {
     let rsp = await HTTP.post('https://api.dickeyxxx.com')
     expect(rsp).toEqual({message: 'ok'})
   })
-  test.only('faithfully passes custom-encoded content-types', async () => {
+  test('faithfully passes custom-encoded content-types', async () => {
+    let apiEncoded = nock('https://api.dickeyxxx.com', {
+      reqheaders: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    })
+
     let body = {
       'karate': 'chop',
       'judo': 'throw',
       'taewkondo': 'kick',
       'jujitsu': 'strangle'
     }
+
     let options = {
       'headers': {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       'body': querystring.stringify(body)
     }
-    api.post('/', options)
+
+    apiEncoded
+      .post('/', querystring.stringify(body))
+      .reply(200, {message: 'ok'})
+
     let rsp = await HTTP.post('https://api.dickeyxxx.com/', options)
     expect(rsp).toEqual({message: 'ok'})
   })
