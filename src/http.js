@@ -74,16 +74,17 @@ export default class HTTP {
     return http.body
   }
 
-  static parseBody (http: HTTP) {
-    if (!http.headers['Content-Type'] || http.headers['Content-Type'] === 'application/json') {
-      http.headers['Content-Type'] = 'application/json'
-      http.requestBody = JSON.stringify(http.body)
-      http.headers['Content-Length'] = Buffer.byteLength(http.requestBody).toString()
-    } else {
-      http.requestBody = http.body
-      http.headers['Content-Length'] = Buffer.byteLength(http.requestBody).toString()
+  parseBody (body: Object) {
+    if (!this.headers['Content-Type']) {
+      this.headers['Content-Type'] = 'application/json'
     }
-    http.body = undefined
+
+    if (this.headers['Content-Type'] === 'application/json') {
+      this.requestBody = JSON.stringify(body)
+    } else {
+      this.requestBody = body
+    }
+    this.headers['Content-Length'] = Buffer.byteLength(this.requestBody).toString()
   }
 
   /**
@@ -129,7 +130,8 @@ export default class HTTP {
     this.host = u.host || this.host
     this.port = u.port || this.port || (this.protocol === 'https:' ? 443 : 80)
     this.path = u.path || this.path
-    if (options.body) HTTP.parseBody(this)
+    if (options.body) this.parseBody(options.body)
+    this.body = undefined
   }
 
   async request () {
