@@ -3,6 +3,7 @@
 import HTTP from './http'
 import nock from 'nock'
 import pjson from '../package.json'
+import querystring from 'querystring'
 
 nock.disableNetConnect()
 
@@ -68,6 +69,83 @@ describe('HTTP.get()', () => {
   })
 })
 
+describe('HTTP.post()', () => {
+  test('makes a POST request', async () => {
+    api.post('/', {'foo': 'bar'})
+      .reply(200, {message: 'ok'})
+    let rsp = await HTTP.post('https://api.dickeyxxx.com', {body: {'foo': 'bar'}})
+    expect(rsp).toEqual({message: 'ok'})
+  })
+  test('does not include a body if no body is passed in', async () => {
+    api.post('/')
+      .reply(200, {message: 'ok'})
+    let rsp = await HTTP.post('https://api.dickeyxxx.com')
+    expect(rsp).toEqual({message: 'ok'})
+  })
+  test('faithfully passes custom-encoded content-types', async () => {
+    let apiEncoded = nock('https://api.dickeyxxx.com', {
+      reqheaders: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    })
+
+    let body = {
+      'karate': 'chop',
+      'judo': 'throw',
+      'taewkondo': 'kick',
+      'jujitsu': 'strangle'
+    }
+
+    let options = {
+      'headers': {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      'body': querystring.stringify(body)
+    }
+
+    apiEncoded
+      .post('/', querystring.stringify(body))
+      .reply(200, {message: 'ok'})
+
+    let rsp = await HTTP.post('https://api.dickeyxxx.com/', options)
+    expect(rsp).toEqual({message: 'ok'})
+  })
+})
+describe('HTTP.parseBody()', () => {
+  let body
+  let http
+  beforeEach(() => {
+    body = {
+      'karate': 'chop',
+      'judo': 'throw',
+      'taewkondo': 'kick',
+      'jujitsu': 'strangle'
+    }
+    http = new HTTP('www.duckduckgo.com', {'body': body})
+  })
+  it('sets the Content-Length', () => {
+    expect(http.headers['Content-Length']).toEqual(Buffer.byteLength(JSON.stringify(body)).toString())
+  })
+  it('sets the Content-Type to JSON when Content-Type is unspecificed', () => {
+    expect(http.headers['Content-Type']).toEqual('application/json')
+  })
+  it('does not set the Content Type if it already exists', () => {
+    let options = {
+      'headers': {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      'body': querystring.stringify(body)
+    }
+    http = new HTTP('www.duckduckgo.com', options)
+    expect(http.headers['Content-Type']).toEqual(options.headers['Content-Type'])
+  })
+  it('resets the value for http.body object', () => {
+    expect(http.body).toBe(undefined)
+  })
+  it('sets the requestBody to the body contents', () => {
+    expect(http.requestBody).toBe(JSON.stringify(body))
+  })
+})
 describe('HTTP.stream()', () => {
   test('streams a response', async done => {
     api = nock('http://api.dickeyxxx.com')

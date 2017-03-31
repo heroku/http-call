@@ -14,8 +14,8 @@ function concat (stream) {
   })
 }
 
-type Method = | "GET" | "POST" | "PATCH" | "PUT" | "DELETE"
-type Headers = {[key: string]: string}
+type Method = | 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
+type Headers = { [key: string]: string }
 type Protocol = | 'https:' | 'http:'
 
 /**
@@ -29,12 +29,9 @@ export type RequestOptions = {
   headers: Headers,
   raw?: boolean,
   host?: string,
-  protocol?: Protocol
+  protocol?: Protocol,
+  body?: any
 }
-
-type Json = | string | number | boolean | null | JsonObject | JsonArray // eslint-disable-line
-type JsonObject = { [key:string]: Json }
-type JsonArray = Json[]
 
 /**
  * Utility for simple HTTP calls
@@ -57,6 +54,37 @@ export default class HTTP {
     let http = new this(url, options)
     await http.request()
     return http.body
+  }
+
+  /**
+   * make an http POST request
+   * @param {string} url - url or path to call
+   * @param {RequestOptions} options
+   * @returns {Promise}
+   * @example
+   * ```js
+   * const http = require('http-call')
+   * await http.post('https://google.com')
+   * ```
+   */
+  static async post (url, options: $Shape<RequestOptions> = {}) {
+    options.method = 'POST'
+    let http = new this(url, options)
+    await http.request()
+    return http.body
+  }
+
+  parseBody (body: Object) {
+    if (!this.headers['Content-Type']) {
+      this.headers['Content-Type'] = 'application/json'
+    }
+
+    if (this.headers['Content-Type'] === 'application/json') {
+      this.requestBody = JSON.stringify(body)
+    } else {
+      this.requestBody = body
+    }
+    this.headers['Content-Length'] = Buffer.byteLength(this.requestBody).toString()
   }
 
   /**
@@ -89,7 +117,8 @@ export default class HTTP {
     'user-agent': `${pjson.name}/${pjson.version} node-${process.version}`
   }
   response: http$IncomingMessage
-  body: Json
+  requestBody: any
+  body: any
 
   constructor (url: string, options: $Shape<RequestOptions> = {}) {
     if (!url) throw new Error('no url provided')
@@ -101,6 +130,8 @@ export default class HTTP {
     this.host = u.host || this.host
     this.port = u.port || this.port || (this.protocol === 'https:' ? 443 : 80)
     this.path = u.path || this.path
+    if (options.body) this.parseBody(options.body)
+    this.body = undefined
   }
 
   async request () {
@@ -122,6 +153,7 @@ export default class HTTP {
     return new Promise((resolve, reject) => {
       let request = this.http.request(this, resolve)
       request.on('error', reject)
+      if (this.requestBody) request.write(this.requestBody)
       request.end()
     })
   }
@@ -135,7 +167,7 @@ export default class HTTP {
   HTTPError = class HTTPError extends Error {
     statusCode: number
 
-    constructor (http: HTTP, body: Json) {
+    constructor (http: HTTP, body: any) {
       body = `\n${util.inspect(body)}`
       super(`HTTP Error ${http.response.statusCode} for ${http.method} ${http.url}${body}`)
       this.statusCode = http.response.statusCode
