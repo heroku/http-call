@@ -63,5 +63,8 @@
     "ignore": [
       "flow-typed"
     ]
+  },
+  "dependencies": {
+    "tunnel-agent": "0.6.0"
   }
 }
