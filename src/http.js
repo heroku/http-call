@@ -5,6 +5,7 @@ import uri from 'url'
 import pjson from '../package.json'
 import http from 'http'
 import https from 'https'
+import proxyutil from './proxy-util'
 
 function concat (stream) {
   return new Promise(resolve => {
@@ -119,6 +120,7 @@ export default class HTTP {
   response: http$IncomingMessage
   requestBody: any
   body: any
+  agent: any
 
   constructor (url: string, options: $Shape<RequestOptions> = {}) {
     if (!url) throw new Error('no url provided')
@@ -132,6 +134,7 @@ export default class HTTP {
     this.path = u.path || this.path
     if (options.body) this.parseBody(options.body)
     this.body = undefined
+    if (proxyutil.usingProxy) this.agent = proxyutil.agent(u)
   }
 
   async request () {
