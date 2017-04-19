@@ -1,0 +1,27 @@
+---
+version: 2
+jobs:
+  build:
+    docker:
+      - image: dickeyxxx/cli-engine-docker:v1.0.0
+    working_directory: /tmp/http-call
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - http-call-{{ .Branch }}-{{checksum "package.json"}}
+            - http-call-{{ .Branch }}
+            - http-call-master
+      - run: yarn
+      - run: ./node_modules/.bin/jest --coverage && bash <(curl -s https://codecov.io/bash)
+      - run: ./node_modules/.bin/flow check
+      - run: ./node_modules/.bin/standard
+      - save_cache:
+          key: http-call-{{ .Branch}}-{{checksum "package.json"}}
+          paths:
+            - /tmp/http-call/node_modules
+            - /usr/local/share/.cache/yarn
+      - save_cache:
+          key: http-call-{{ .Branch}}
+          paths:
+            - /usr/local/share/.cache/yarn
