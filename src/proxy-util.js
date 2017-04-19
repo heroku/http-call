@@ -18,12 +18,7 @@ export default class ProxyUtil {
 
   static findTunnel (urlParsed: Object) : Function {
     let tunnel = require('tunnel-agent')
-
-    if (urlParsed.protocol === 'https:') {
-      return tunnel.httpsOverHttp
-    } else {
-      return tunnel.httpOverHttp
-    }
+    return urlParsed.protocol === 'https:' ? tunnel.httpsOverHttp : tunnel.httpOverHttp
   }
 
   static findProxy (urlParsed: Object) : ?string {
