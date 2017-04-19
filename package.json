@@ -47,7 +47,6 @@
     "doc": "jsdoc2md -c doc/jsdoc2md.json --files src/http.js > README.md",
     "prepare": "npm run clean && npm run build && npm run copy-flow",
     "test": "jest && flow && standard",
-    "version": "npm run doc && git add README.md",
     "watch": "babel --watch src -d lib --ignore '*.test.js'"
   },
   "standard": {
