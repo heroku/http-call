@@ -131,7 +131,7 @@ export default class HTTP {
     this.headers = headers
     let u = uri.parse(url)
     this.protocol = u.protocol || this.protocol
-    this.host = u.host || this.host
+    this.host = u.hostname || this.host
     this.port = u.port || this.port || (this.protocol === 'https:' ? 443 : 80)
     this.path = u.path || this.path
     if (options.body) this.parseBody(options.body)
