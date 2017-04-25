@@ -25,6 +25,14 @@ describe('HTTP.get()', () => {
     expect(rsp).toEqual({message: 'ok'})
   })
 
+  test('makes a request to a port', async () => {
+    api = nock('https://api.dickeyxxx.com:3000')
+    api.get('/')
+      .reply(200, {message: 'ok'})
+    let rsp = await HTTP.get('https://api.dickeyxxx.com:3000')
+    expect(rsp).toEqual({message: 'ok'})
+  })
+
   test('makes a http GET request', async () => {
     api = nock('http://api.dickeyxxx.com')
     api.get('/')
