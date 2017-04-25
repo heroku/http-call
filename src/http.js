@@ -20,16 +20,18 @@ type Headers = { [key: string]: string }
 type Protocol = | 'https:' | 'http:'
 
 /**
- * @typedef {Object} RequestOptions
+ * @typedef {Object} HTTPRequestOptions
  * @property {Object.<string, string>} headers - request headers
  * @property {string} method - request method (GET/POST/etc)
  * @property {(string)} body - request body. Sets content-type to application/json and stringifies when object
+ * @property {(number)} port - port to use
  */
-export type RequestOptions = {
+export type HTTPRequestOptions = {
   method: Method,
   headers: Headers,
   raw?: boolean,
   host?: string,
+  port?: number,
   protocol?: Protocol,
   body?: any
 }
@@ -42,7 +44,7 @@ export default class HTTP {
   /**
    * make an http GET request
    * @param {string} url - url or path to call
-   * @param {RequestOptions} options
+   * @param {HTTPRequestOptions} options
    * @returns {Promise}
    * @example
    * ```js
@@ -50,7 +52,7 @@ export default class HTTP {
    * await http.get('https://google.com')
    * ```
    */
-  static async get (url, options: $Shape<RequestOptions> = {}) {
+  static async get (url, options: $Shape<HTTPRequestOptions> = {}) {
     options.method = 'GET'
     let http = new this(url, options)
     await http.request()
@@ -60,7 +62,7 @@ export default class HTTP {
   /**
    * make an http POST request
    * @param {string} url - url or path to call
-   * @param {RequestOptions} options
+   * @param {HTTPRequestOptions} options
    * @returns {Promise}
    * @example
    * ```js
@@ -68,7 +70,7 @@ export default class HTTP {
    * await http.post('https://google.com')
    * ```
    */
-  static async post (url, options: $Shape<RequestOptions> = {}) {
+  static async post (url, options: $Shape<HTTPRequestOptions> = {}) {
     options.method = 'POST'
     let http = new this(url, options)
     await http.request()
@@ -91,7 +93,7 @@ export default class HTTP {
   /**
    * make a streaming request
    * @param {string} url - url or path to call
-   * @param {RequestOptions} options
+   * @param {HTTPRequestOptions} options
    * @returns {Promise}
    * @example
    * ```js
@@ -100,7 +102,7 @@ export default class HTTP {
    * rsp.on('data', console.log)
    * ```
    */
-  static async stream (url: string, options: $Shape<RequestOptions> = {}) {
+  static async stream (url: string, options: $Shape<HTTPRequestOptions> = {}) {
     options.method = 'GET'
     options.raw = true
     let http = new this(url, options)
@@ -122,7 +124,7 @@ export default class HTTP {
   body: any
   agent: any
 
-  constructor (url: string, options: $Shape<RequestOptions> = {}) {
+  constructor (url: string, options: $Shape<HTTPRequestOptions> = {}) {
     if (!url) throw new Error('no url provided')
     let headers = Object.assign(this.headers, options.headers)
     Object.assign(this, options)
