@@ -154,6 +154,34 @@ describe('HTTP.parseBody()', () => {
     expect(http.requestBody).toBe(JSON.stringify(body))
   })
 })
+
+describe('HTTP.put()', () => {
+  test('makes a PUT request', async () => {
+    api.put('/', {'foo': 'bar'})
+      .reply(200, {message: 'ok'})
+    let rsp = await HTTP.put('https://api.dickeyxxx.com', {body: {'foo': 'bar'}})
+    expect(rsp).toEqual({message: 'ok'})
+  })
+})
+
+describe('HTTP.patch()', () => {
+  test('makes a PATCH request', async () => {
+    api.patch('/', {'foo': 'bar'})
+      .reply(200, {message: 'ok'})
+    let rsp = await HTTP.patch('https://api.dickeyxxx.com', {body: {'foo': 'bar'}})
+    expect(rsp).toEqual({message: 'ok'})
+  })
+})
+
+describe('HTTP.delete()', () => {
+  test('makes a DELETE request', async () => {
+    api.delete('/', {'foo': 'bar'})
+      .reply(200, {message: 'ok'})
+    let rsp = await HTTP.delete('https://api.dickeyxxx.com', {body: {'foo': 'bar'}})
+    expect(rsp).toEqual({message: 'ok'})
+  })
+})
+
 describe('HTTP.stream()', () => {
   test('streams a response', async done => {
     api = nock('http://api.dickeyxxx.com')
