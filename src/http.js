@@ -77,6 +77,60 @@ export default class HTTP {
     return http.body
   }
 
+  /**
+   * make an http PUT request
+   * @param {string} url - url or path to call
+   * @param {HTTPRequestOptions} options
+   * @returns {Promise}
+   * @example
+   * ```js
+   * const http = require('http-call')
+   * await http.put('https://google.com')
+   * ```
+   */
+  static async put (url, options: $Shape<HTTPRequestOptions> = {}) {
+    options.method = 'PUT'
+    let http = new this(url, options)
+    await http.request()
+    return http.body
+  }
+
+  /**
+   * make an http PATCH request
+   * @param {string} url - url or path to call
+   * @param {HTTPRequestOptions} options
+   * @returns {Promise}
+   * @example
+   * ```js
+   * const http = require('http-call')
+   * await http.patch('https://google.com')
+   * ```
+   */
+  static async patch (url, options: $Shape<HTTPRequestOptions> = {}) {
+    options.method = 'PATCH'
+    let http = new this(url, options)
+    await http.request()
+    return http.body
+  }
+
+  /**
+   * make an http DELETE request
+   * @param {string} url - url or path to call
+   * @param {HTTPRequestOptions} options
+   * @returns {Promise}
+   * @example
+   * ```js
+   * const http = require('http-call')
+   * await http.delete('https://google.com')
+   * ```
+   */
+  static async delete (url, options: $Shape<HTTPRequestOptions> = {}) {
+    options.method = 'DELETE'
+    let http = new this(url, options)
+    await http.request()
+    return http.body
+  }
+
   parseBody (body: Object) {
     if (!this.headers['Content-Type']) {
       this.headers['Content-Type'] = 'application/json'
