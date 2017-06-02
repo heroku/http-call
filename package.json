@@ -4,6 +4,9 @@
   "version": "1.1.2",
   "author": "Jeff Dickey @dickeyxxx",
   "bugs": "https://github.com/dickeyxxx/http-call/issues",
+  "dependencies": {
+    "tunnel-agent": "^0.6.0"
+  },
   "devDependencies": {
     "babel-cli": "6.24.1",
     "babel-core": "6.24.1",
@@ -61,8 +64,5 @@
     "ignore": [
       "flow-typed"
     ]
-  },
-  "dependencies": {
-    "tunnel-agent": "^0.6.0"
   }
 }
