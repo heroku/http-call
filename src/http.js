@@ -246,6 +246,7 @@ export class HTTPError extends Error {
   statusCode: number
   http: HTTP
   body: any
+  __httpcall = true
 
   constructor (http: HTTP, body: any) {
     let message
