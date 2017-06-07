@@ -206,7 +206,7 @@ export default class HTTP {
     debug(`<-- ${this.method} ${this.url} ${this.response.statusCode}`)
     if (this.response.statusCode >= 200 && this.response.statusCode < 300) {
       if (!this.raw) this.body = await this.parse(this.response)
-    } else throw new this.HTTPError(this, await this.parse(this.response))
+    } else throw new HTTPError(this, await this.parse(this.response))
   }
 
   get http (): (typeof http | typeof https) {
@@ -240,14 +240,20 @@ export default class HTTP {
     let next = await this.get(http.url, opts)
     return http.body.concat(next)
   }
+}
 
-  HTTPError = class HTTPError extends Error {
-    statusCode: number
+export class HTTPError extends Error {
+  statusCode: number
+  http: HTTP
+  body: any
 
-    constructor (http: HTTP, body: any) {
-      body = `\n${util.inspect(body)}`
-      super(`HTTP Error ${http.response.statusCode} for ${http.method} ${http.url}${body}`)
-      this.statusCode = http.response.statusCode
-    }
+  constructor (http: HTTP, body: any) {
+    let message
+    if (typeof body === 'string' || typeof body.message === 'string') message = body.message || body
+    else message = util.inspect(body)
+    super(`HTTP Error ${http.response.statusCode} for ${http.method} ${http.url}\n${message}`)
+    this.statusCode = http.response.statusCode
+    this.http = http
+    this.body = body
   }
 }
