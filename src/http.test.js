@@ -65,14 +65,43 @@ describe('HTTP.get()', () => {
   })
 
   test('displays 404 error', async () => {
-    expect.assertions(1)
+    expect.assertions(2)
     api.get('/')
       .reply(404, 'oops! not found')
     try {
       await HTTP.get('https://api.dickeyxxx.com')
     } catch (err) {
+      expect(err.statusCode).toEqual(404)
       expect(err.message).toEqual(`HTTP Error 404 for GET https://api.dickeyxxx.com:443/
-'oops! not found'`)
+oops! not found`)
+    }
+  })
+
+  test('displays error message', async () => {
+    expect.assertions(3)
+    api.get('/')
+      .reply(404, {message: 'uh oh', otherinfo: [1, 2, 3]})
+    try {
+      await HTTP.get('https://api.dickeyxxx.com')
+    } catch (err) {
+      expect(err.statusCode).toEqual(404)
+      expect(err.message).toEqual(`HTTP Error 404 for GET https://api.dickeyxxx.com:443/
+uh oh`)
+      expect(err.body).toMatchObject({otherinfo: [1, 2, 3]})
+    }
+  })
+
+  test('displays object error', async () => {
+    expect.assertions(3)
+    api.get('/')
+      .reply(404, {otherinfo: [1, 2, 3]})
+    try {
+      await HTTP.get('https://api.dickeyxxx.com')
+    } catch (err) {
+      expect(err.statusCode).toEqual(404)
+      expect(err.message).toEqual(`HTTP Error 404 for GET https://api.dickeyxxx.com:443/
+{ otherinfo: [ 1, 2, 3 ] }`)
+      expect(err.body).toMatchObject({otherinfo: [1, 2, 3]})
     }
   })
 })
