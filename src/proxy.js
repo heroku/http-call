@@ -1,6 +1,8 @@
 // @flow
 
 import uri from 'url'
+import fs from 'fs'
+import path from 'path'
 
 type ProxyOptions = {
   proxy: Object,
@@ -8,8 +10,9 @@ type ProxyOptions = {
 }
 
 export default class ProxyUtil {
-  static get httpProxy () { return process.env.HTTP_PROXY || process.env.http_proxy }
-  static get httpsProxy () { return process.env.HTTPS_PROXY || process.env.https_proxy }
+  static env = process.env
+  static get httpProxy () { return this.env.HTTP_PROXY || this.env.http_proxy }
+  static get httpsProxy () { return this.env.HTTPS_PROXY || this.env.https_proxy }
 
   static get usingProxy () : boolean {
     if (this.httpProxy || this.httpsProxy) return true
@@ -30,10 +33,8 @@ export default class ProxyUtil {
   }
 
   static get sslCertDir () : Array<string> {
-    const certDir = process.env.SSL_CERT_DIR
+    const certDir = this.env.SSL_CERT_DIR
     if (certDir) {
-      const fs = require('fs')
-      const path = require('path')
       return fs.readdirSync(certDir).map(f => path.join(certDir, f))
     } else {
       return []
@@ -41,13 +42,12 @@ export default class ProxyUtil {
   }
 
   static get sslCertFile () : Array<string> {
-    return process.env.SSL_CERT_FILE ? [process.env.SSL_CERT_FILE] : []
+    return this.env.SSL_CERT_FILE ? [this.env.SSL_CERT_FILE] : []
   }
 
   static get certs () : Array<Buffer> {
     let filenames = this.sslCertFile.concat(this.sslCertDir)
     return filenames.map(function (filename: string) : Buffer {
-      const fs = require('fs')
       return fs.readFileSync(filename)
     })
   }

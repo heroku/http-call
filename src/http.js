@@ -5,7 +5,7 @@ import uri from 'url'
 import pjson from '../package.json'
 import http from 'http'
 import https from 'https'
-import proxyutil from './proxy-util'
+import proxy from './proxy'
 
 function concat (stream) {
   return new Promise(resolve => {
@@ -190,7 +190,7 @@ export default class HTTP {
     this.path = u.path || this.path
     if (options.body) this.parseBody(options.body)
     this.body = undefined
-    if (proxyutil.usingProxy) this.agent = proxyutil.agent(u)
+    if (proxy.usingProxy) this.agent = proxy.agent(u)
   }
 
   async request () {
