@@ -7,6 +7,8 @@ import http from 'http'
 import https from 'https'
 import proxy from './proxy'
 
+const debug = require('debug')('http-call')
+
 function concat (stream) {
   return new Promise(resolve => {
     let strings = []
@@ -24,17 +26,19 @@ type Protocol = | 'https:' | 'http:'
  * @property {Object.<string, string>} headers - request headers
  * @property {string} method - request method (GET/POST/etc)
  * @property {(string)} body - request body. Sets content-type to application/json and stringifies when object
+ * @property {(boolean)} partial - do not make continuous requests while receiving a Next-Range header for GET requests
  * @property {(number)} port - port to use
  */
-export type HTTPRequestOptions = {
+export type HTTPRequestOptions = $Shape<{
   method: Method,
   headers: Headers,
   raw?: boolean,
   host?: string,
   port?: number,
   protocol?: Protocol,
-  body?: any
-}
+  body?: any,
+  partial?: boolean
+}>
 
 /**
  * Utility for simple HTTP calls
@@ -52,11 +56,11 @@ export default class HTTP {
    * await http.get('https://google.com')
    * ```
    */
-  static async get (url, options: $Shape<HTTPRequestOptions> = {}) {
+  static async get (url, options: HTTPRequestOptions = {}) {
     options.method = 'GET'
     let http = new this(url, options)
     await http.request()
-    return http.body
+    return this._getNextBody(http)
   }
 
   /**
@@ -70,7 +74,7 @@ export default class HTTP {
    * await http.post('https://google.com')
    * ```
    */
-  static async post (url, options: $Shape<HTTPRequestOptions> = {}) {
+  static async post (url, options: HTTPRequestOptions = {}) {
     options.method = 'POST'
     let http = new this(url, options)
     await http.request()
@@ -88,7 +92,7 @@ export default class HTTP {
    * await http.put('https://google.com')
    * ```
    */
-  static async put (url, options: $Shape<HTTPRequestOptions> = {}) {
+  static async put (url, options: HTTPRequestOptions = {}) {
     options.method = 'PUT'
     let http = new this(url, options)
     await http.request()
@@ -106,7 +110,7 @@ export default class HTTP {
    * await http.patch('https://google.com')
    * ```
    */
-  static async patch (url, options: $Shape<HTTPRequestOptions> = {}) {
+  static async patch (url, options: HTTPRequestOptions = {}) {
     options.method = 'PATCH'
     let http = new this(url, options)
     await http.request()
@@ -124,7 +128,7 @@ export default class HTTP {
    * await http.delete('https://google.com')
    * ```
    */
-  static async delete (url, options: $Shape<HTTPRequestOptions> = {}) {
+  static async delete (url, options: HTTPRequestOptions = {}) {
     options.method = 'DELETE'
     let http = new this(url, options)
     await http.request()
@@ -156,7 +160,7 @@ export default class HTTP {
    * rsp.on('data', console.log)
    * ```
    */
-  static async stream (url: string, options: $Shape<HTTPRequestOptions> = {}) {
+  static async stream (url: string, options: HTTPRequestOptions = {}) {
     options.method = 'GET'
     options.raw = true
     let http = new this(url, options)
@@ -170,6 +174,7 @@ export default class HTTP {
   protocol = 'https:'
   path = '/'
   raw = false
+  partial = false
   headers: Headers = {
     'user-agent': `${pjson.name}/${pjson.version} node-${process.version}`
   }
@@ -177,9 +182,11 @@ export default class HTTP {
   requestBody: any
   body: any
   agent: any
+  options: HTTPRequestOptions
 
-  constructor (url: string, options: $Shape<HTTPRequestOptions> = {}) {
+  constructor (url: string, options: HTTPRequestOptions = {}) {
     if (!url) throw new Error('no url provided')
+    this.options = options
     let headers = Object.assign(this.headers, options.headers)
     Object.assign(this, options)
     this.headers = headers
@@ -194,7 +201,9 @@ export default class HTTP {
   }
 
   async request () {
+    debug(`--> ${this.method} ${this.url}`)
     this.response = await this.performRequest()
+    debug(`<-- ${this.method} ${this.url} ${this.response.statusCode}`)
     if (this.response.statusCode >= 200 && this.response.statusCode < 300) {
       if (!this.raw) this.body = await this.parse(this.response)
     } else throw new this.HTTPError(this, await this.parse(this.response))
@@ -221,6 +230,15 @@ export default class HTTP {
     let body = await concat(response)
     return response.headers['content-type'] === 'application/json'
       ? JSON.parse(body) : body
+  }
+
+  static async _getNextBody (http: this) {
+    if (http.partial || !http.response.headers['next-range'] || !(http.body instanceof Array)) return http.body
+    let opts: HTTPRequestOptions = {headers: {}}
+    opts = Object.assign(opts, http.options)
+    opts.headers['range'] = http.response.headers['next-range']
+    let next = await this.get(http.url, opts)
+    return http.body.concat(next)
   }
 
   HTTPError = class HTTPError extends Error {

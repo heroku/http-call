@@ -5,6 +5,7 @@
   "author": "Jeff Dickey @dickeyxxx",
   "bugs": "https://github.com/dickeyxxx/http-call/issues",
   "dependencies": {
+    "debug": "^2.x",
     "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
@@ -28,6 +29,9 @@
   "engines": {
     "node": ">=7.6.0"
   },
+  "files": [
+    "lib"
+  ],
   "homepage": "https://github.com/dickeyxxx/http-call",
   "jest": {
     "testEnvironment": "node",
@@ -49,7 +53,7 @@
     "doc": "jsdoc2md -c doc/jsdoc2md.json --files src/http.js > README.md",
     "prepare": "npm run clean && npm run build && npm run copy-flow",
     "test": "jest && flow && standard",
-    "watch": "babel --watch src -d lib --ignore '*.test.js'"
+    "watch": "nodemon -e js -i lib --exec \"npm run prepare\""
   },
   "standard": {
     "parser": "babel-eslint",
