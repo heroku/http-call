@@ -153,6 +153,27 @@ describe('HTTP.parseBody()', () => {
   it('sets the requestBody to the body contents', () => {
     expect(http.requestBody).toBe(JSON.stringify(body))
   })
+
+  describe('with next-range header', () => {
+    beforeEach(() => {
+      api.get('/')
+        .reply(206, [1, 2, 3], {
+          'next-range': '4'
+        })
+      .get('/')
+        .matchHeader('range', '4')
+        .reply(206, [4, 5, 6], {
+          'next-range': '7'
+        })
+      .get('/')
+        .matchHeader('range', '7')
+        .reply(206, [7, 8, 9])
+    })
+    test('gets next body when next-range is set', async () => {
+      let rsp = await HTTP.get('https://api.dickeyxxx.com')
+      expect(rsp).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
+    })
+  })
 })
 
 describe('HTTP.put()', () => {
