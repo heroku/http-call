@@ -64,6 +64,53 @@ describe('HTTP.get()', () => {
     await HTTP.get('https://api.dickeyxxx.com', {headers})
   })
 
+  describe('wait mocked out', () => {
+    let wait = HTTP.prototype._wait
+
+    beforeAll(() => {
+      ;(HTTP.prototype: any)._wait = jest.fn()
+    })
+
+    afterAll(() => {
+      ;(HTTP.prototype: any)._wait = wait
+    })
+
+    test('retries then succeeds', async () => {
+      api.get('/').replyWithError({message: 'timed out 1', code: 'ETIMEDOUT'})
+      api.get('/').replyWithError({message: 'timed out 2', code: 'ETIMEDOUT'})
+      api.get('/').replyWithError({message: 'timed out 3', code: 'ETIMEDOUT'})
+      api.get('/').replyWithError({message: 'timed out 4', code: 'ETIMEDOUT'})
+      api.get('/').reply(200, {message: 'foo'})
+      let rsp = await HTTP.get('https://api.dickeyxxx.com')
+      expect(rsp).toEqual({message: 'foo'})
+    })
+
+    test('retries 5 times on ETIMEDOUT', async () => {
+      expect.assertions(1)
+      api.get('/').replyWithError({message: 'timed out 1', code: 'ETIMEDOUT'})
+      api.get('/').replyWithError({message: 'timed out 2', code: 'ETIMEDOUT'})
+      api.get('/').replyWithError({message: 'timed out 3', code: 'ETIMEDOUT'})
+      api.get('/').replyWithError({message: 'timed out 4', code: 'ETIMEDOUT'})
+      api.get('/').replyWithError({message: 'timed out 5', code: 'ETIMEDOUT'})
+      api.get('/').replyWithError({message: 'timed out 6', code: 'ETIMEDOUT'})
+      try {
+        await HTTP.get('https://api.dickeyxxx.com')
+      } catch (err) {
+        expect(err.message).toEqual('timed out 6')
+      }
+    })
+  })
+
+  test('errors on ENOTFOUND', async () => {
+    expect.assertions(1)
+    api.get('/').replyWithError({message: 'not found', code: 'ENOTFOUND'})
+    try {
+      await HTTP.get('https://api.dickeyxxx.com')
+    } catch (err) {
+      expect(err.message).toEqual('not found')
+    }
+  })
+
   test('displays 404 error', async () => {
     expect.assertions(2)
     api.get('/')
