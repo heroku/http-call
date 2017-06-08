@@ -58,8 +58,7 @@ export default class HTTP {
    */
   static async get (url, options: HTTPRequestOptions = {}) {
     options.method = 'GET'
-    let http = new this(url, options)
-    await http.request()
+    let http = await this.request(url, options)
     return this._getNextBody(http)
   }
 
@@ -76,8 +75,7 @@ export default class HTTP {
    */
   static async post (url, options: HTTPRequestOptions = {}) {
     options.method = 'POST'
-    let http = new this(url, options)
-    await http.request()
+    let http = await this.request(url, options)
     return http.body
   }
 
@@ -94,8 +92,7 @@ export default class HTTP {
    */
   static async put (url, options: HTTPRequestOptions = {}) {
     options.method = 'PUT'
-    let http = new this(url, options)
-    await http.request()
+    let http = await this.request(url, options)
     return http.body
   }
 
@@ -112,8 +109,7 @@ export default class HTTP {
    */
   static async patch (url, options: HTTPRequestOptions = {}) {
     options.method = 'PATCH'
-    let http = new this(url, options)
-    await http.request()
+    let http = await this.request(url, options)
     return http.body
   }
 
@@ -130,22 +126,8 @@ export default class HTTP {
    */
   static async delete (url, options: HTTPRequestOptions = {}) {
     options.method = 'DELETE'
-    let http = new this(url, options)
-    await http.request()
+    let http = await this.request(url, options)
     return http.body
-  }
-
-  parseBody (body: Object) {
-    if (!this.headers['Content-Type']) {
-      this.headers['Content-Type'] = 'application/json'
-    }
-
-    if (this.headers['Content-Type'] === 'application/json') {
-      this.requestBody = JSON.stringify(body)
-    } else {
-      this.requestBody = body
-    }
-    this.headers['Content-Length'] = Buffer.byteLength(this.requestBody).toString()
   }
 
   /**
@@ -163,9 +145,14 @@ export default class HTTP {
   static async stream (url: string, options: HTTPRequestOptions = {}) {
     options.method = 'GET'
     options.raw = true
-    let http = new this(url, options)
-    await http.request()
+    let http = await this.request(url, options)
     return http.response
+  }
+
+  static async request (url: string, options: HTTPRequestOptions = {}): Promise<this> {
+    let http = new this(url, options)
+    await http._request()
+    return http
   }
 
   method: Method = 'GET'
@@ -200,7 +187,7 @@ export default class HTTP {
     if (proxy.usingProxy) this.agent = proxy.agent(u)
   }
 
-  async request () {
+  async _request () {
     debug(`--> ${this.method} ${this.url}`)
     this.response = await this.performRequest()
     debug(`<-- ${this.method} ${this.url} ${this.response.statusCode}`)
@@ -230,6 +217,19 @@ export default class HTTP {
     let body = await concat(response)
     return response.headers['content-type'] === 'application/json'
       ? JSON.parse(body) : body
+  }
+
+  parseBody (body: Object) {
+    if (!this.headers['Content-Type']) {
+      this.headers['Content-Type'] = 'application/json'
+    }
+
+    if (this.headers['Content-Type'] === 'application/json') {
+      this.requestBody = JSON.stringify(body)
+    } else {
+      this.requestBody = body
+    }
+    this.headers['Content-Length'] = Buffer.byteLength(this.requestBody).toString()
   }
 
   static async _getNextBody (http: this) {
