@@ -187,13 +187,28 @@ export default class HTTP {
     if (proxy.usingProxy) this.agent = proxy.agent(u)
   }
 
-  async _request () {
-    debug(`--> ${this.method} ${this.url}`)
-    this.response = await this.performRequest()
-    debug(`<-- ${this.method} ${this.url} ${this.response.statusCode}`)
+  async _request (retries: number = 0) {
+    try {
+      debug(`--> ${this.method} ${this.url}`)
+      this.response = await this.performRequest()
+      debug(`<-- ${this.method} ${this.url} ${this.response.statusCode}`)
+    } catch (err) {
+      return this.maybeRetry(err, retries)
+    }
     if (this.response.statusCode >= 200 && this.response.statusCode < 300) {
       if (!this.raw) this.body = await this.parse(this.response)
     } else throw new HTTPError(this, await this.parse(this.response))
+  }
+
+  async maybeRetry (err: Error, retries: number) {
+    const allowed = require('is-retry-allowed')
+    if (retries < 5 && err.code && allowed(err)) {
+      let noise = Math.random() * 100
+      await this._wait((1 << retries) * 1000 + noise)
+      await this._request(retries + 1)
+      return
+    }
+    throw err
   }
 
   get http (): (typeof http | typeof https) {
@@ -239,6 +254,10 @@ export default class HTTP {
     opts.headers['range'] = http.response.headers['next-range']
     let next = await this.get(http.url, opts)
     return http.body.concat(next)
+  }
+
+  _wait (ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms))
   }
 }
 
