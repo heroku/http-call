@@ -143,7 +143,7 @@ export default class HTTP {
    * ```
    */
   static async stream (url: string, options: HTTPRequestOptions = {}) {
-    options.method = 'GET'
+    options.method = options.method || 'GET'
     options.raw = true
     let http = await this.request(url, options)
     return http.response
