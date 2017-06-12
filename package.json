@@ -7,11 +7,12 @@
   "dependencies": {
     "debug": "^2.6.8",
     "is-retry-allowed": "^1.1.0",
+    "is-stream": "^1.1.0",
     "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
     "babel-cli": "6.24.1",
-    "babel-core": "6.24.1",
+    "babel-core": "^6.25.0",
     "babel-eslint": "7.2.3",
     "babel-jest": "20.0.3",
     "babel-plugin-transform-class-properties": "6.24.1",
@@ -63,6 +64,7 @@
     ],
     "globals": [
       "http$IncomingMessage",
+      "http$ClientRequest",
       "$Diff",
       "$Shape"
     ],

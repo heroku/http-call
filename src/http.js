@@ -6,6 +6,7 @@ import pjson from '../package.json'
 import http from 'http'
 import https from 'https'
 import proxy from './proxy'
+import isStream from 'is-stream'
 
 const debug = require('debug')('http-call')
 
@@ -166,6 +167,7 @@ export default class HTTP {
     'user-agent': `${pjson.name}/${pjson.version} node-${process.version}`
   }
   response: http$IncomingMessage
+  request: http$ClientRequest
   requestBody: any
   body: any
   agent: any
@@ -221,10 +223,13 @@ export default class HTTP {
 
   performRequest () {
     return new Promise((resolve, reject) => {
-      let request = this.http.request(this, resolve)
-      request.on('error', reject)
-      if (this.requestBody) request.write(this.requestBody)
-      request.end()
+      this.request = this.http.request(this, resolve)
+      this.request.on('error', reject)
+      if (isStream.readable(this.requestBody)) {
+        this.requestBody.pipe(this.request)
+      } else {
+        this.request.end(this.requestBody)
+      }
     })
   }
 
@@ -235,6 +240,10 @@ export default class HTTP {
   }
 
   parseBody (body: Object) {
+    if (isStream.readable(body)) {
+      this.requestBody = body
+      return
+    }
     if (!this.headers['Content-Type']) {
       this.headers['Content-Type'] = 'application/json'
     }
