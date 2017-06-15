@@ -101,13 +101,20 @@ describe('HTTP.get()', () => {
     })
   })
 
-  test('errors on ENOTFOUND', async () => {
-    expect.assertions(1)
+  test('retries on ENOTFOUND', async () => {
     api.get('/').replyWithError({message: 'not found', code: 'ENOTFOUND'})
+    api.get('/').reply(200, {message: 'foo'})
+    let r = await HTTP.get('https://api.dickeyxxx.com')
+    expect(r).toMatchObject({message: 'foo'})
+  })
+
+  test('errors on EFOOBAR', async () => {
+    expect.assertions(1)
+    api.get('/').replyWithError({message: 'oom', code: 'OUT_OF_MEM'})
     try {
       await HTTP.get('https://api.dickeyxxx.com')
     } catch (err) {
-      expect(err.message).toEqual('not found')
+      expect(err.message).toEqual('oom')
     }
   })
 

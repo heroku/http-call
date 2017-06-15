@@ -203,8 +203,13 @@ export default class HTTP {
   }
 
   async maybeRetry (err: Error, retries: number) {
-    const allowed = require('is-retry-allowed')
-    if (retries < 5 && err.code && allowed(err)) {
+    const allowed = (err: Error): boolean => {
+      if (retries >= 5) return false
+      if (!err.code) return false
+      if (err.code === 'ENOTFOUND') return true
+      return require('is-retry-allowed')(err)
+    }
+    if (allowed(err)) {
       let noise = Math.random() * 100
       await this._wait((1 << retries) * 1000 + noise)
       await this._request(retries + 1)
