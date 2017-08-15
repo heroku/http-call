@@ -19,19 +19,6 @@ export default class ProxyUtil {
     return false
   }
 
-  static findTunnel (urlParsed: Object) : Function {
-    let tunnel = require('tunnel-agent')
-    return urlParsed.protocol === 'https:' ? tunnel.httpsOverHttp : tunnel.httpOverHttp
-  }
-
-  static findProxy (urlParsed: Object) : ?string {
-    if (urlParsed.protocol === 'https:') {
-      return this.httpsProxy || this.httpProxy
-    } else {
-      return this.httpProxy
-    }
-  }
-
   static get sslCertDir () : Array<string> {
     const certDir = this.env.SSL_CERT_DIR
     if (certDir) {
@@ -52,11 +39,13 @@ export default class ProxyUtil {
     })
   }
 
-  static agent (urlParsed: Object) : any {
-    const u = this.findProxy(urlParsed)
+  static agent (https: boolean) : any {
+    if (!this.usingProxy) return
+    const u = https ? this.httpsProxy : this.httpProxy
     if (u) {
       let proxyParsed = uri.parse(u)
-      let tunnelMethod = this.findTunnel(urlParsed)
+      let tunnel = require('tunnel-agent')
+      let tunnelMethod = https ? tunnel.httpsOverHttp : tunnel.httpOverHttp
       let opts: ProxyOptions = {
         proxy: {
           host: proxyParsed.hostname,
@@ -73,7 +62,7 @@ export default class ProxyUtil {
       }
 
       let tunnelAgent = tunnelMethod(opts)
-      if (urlParsed.protocol === 'https:') {
+      if (https) {
         tunnelAgent.defaultPort = 443
       }
       return tunnelAgent
