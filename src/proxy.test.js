@@ -51,3 +51,27 @@ describe('with proxies', () => {
     })
   })
 })
+
+describe('with http proxy only', () => {
+  beforeEach(() => {
+    Proxy.env.HTTP_PROXY = 'http://user:pass@foo.com'
+  })
+
+  test('has agent', () => {
+    expect(Proxy.agent(true)).toMatchObject({
+      defaultPort: 443,
+      options: {
+        proxy: {
+          host: 'foo.com',
+          port: '8080',
+          proxyAuth: 'user:pass'
+        }
+      },
+      proxyOptions: {
+        host: 'foo.com',
+        port: '8080',
+        proxyAuth: 'user:pass'
+      }
+    })
+  })
+})
