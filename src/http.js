@@ -188,7 +188,7 @@ export default class HTTP {
     this.body = undefined
     if (proxy.usingProxy) {
       this.agent = proxy.agent(u)
-      debug('proxy: %j', this.agent.options)
+      if (this.agent) debug('proxy: %j', this.agent.options)
     }
   }
 
