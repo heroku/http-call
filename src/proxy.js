@@ -41,7 +41,7 @@ export default class ProxyUtil {
 
   static agent (https: boolean) : any {
     if (!this.usingProxy) return
-    const u = https ? this.httpsProxy : this.httpProxy
+    const u = https ? (this.httpsProxy || this.httpProxy) : this.httpProxy
     if (u) {
       let proxyParsed = uri.parse(u)
       let tunnel = require('tunnel-agent')
