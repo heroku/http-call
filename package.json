@@ -5,7 +5,7 @@
   "author": "Jeff Dickey @dickeyxxx",
   "bugs": "https://github.com/dickeyxxx/http-call/issues",
   "dependencies": {
-    "debug": "^2.6.8",
+    "debug": "^3.0.0",
     "is-retry-allowed": "^1.1.0",
     "is-stream": "^1.1.0",
     "tunnel-agent": "^0.6.0"
@@ -18,15 +18,15 @@
     "babel-plugin-transform-class-properties": "6.24.1",
     "babel-plugin-transform-es2015-modules-commonjs": "6.24.1",
     "babel-plugin-transform-flow-strip-types": "6.22.0",
-    "flow-bin": "0.47.0",
-    "flow-copy-source": "1.1.0",
-    "flow-typed": "2.1.2",
+    "flow-bin": "^0.52.0",
+    "flow-copy-source": "^1.2.0",
+    "flow-typed": "^2.1.5",
     "jest": "20.0.4",
     "jsdoc-babel": "0.3.0",
     "jsdoc-to-markdown": "3.0.0",
-    "nock": "9.0.13",
+    "nock": "^9.0.14",
     "rimraf": "^2.6.1",
-    "standard": "10.0.2"
+    "standard": "^10.0.3"
   },
   "engines": {
     "node": ">=7.6.0"
