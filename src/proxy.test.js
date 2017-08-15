@@ -1,16 +1,13 @@
 // @flow
 
 import Proxy from './proxy'
-import uri from 'url'
 
 beforeEach(() => {
   Proxy.env = {}
 })
 
-const u = uri.parse('https://api.heroku.com/apps')
-
 test('returns nothing', () => {
-  expect(Proxy.agent(u)).toBeUndefined()
+  expect(Proxy.agent(true)).toBeUndefined()
 })
 
 describe('with proxies', () => {
@@ -20,8 +17,7 @@ describe('with proxies', () => {
   })
 
   test('has http properties', () => {
-    let u = uri.parse('http://api.heroku.com/apps')
-    expect(Proxy.agent(u)).toMatchObject({
+    expect(Proxy.agent(false)).toMatchObject({
       options: {
         proxy: {
           host: 'foo.com',
@@ -38,8 +34,7 @@ describe('with proxies', () => {
   })
 
   test('has https properties', () => {
-    let u = uri.parse('https://api.heroku.com/apps')
-    expect(Proxy.agent(u)).toMatchObject({
+    expect(Proxy.agent(true)).toMatchObject({
       defaultPort: 443,
       options: {
         proxy: {

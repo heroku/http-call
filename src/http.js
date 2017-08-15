@@ -186,10 +186,8 @@ export default class HTTP {
     this.path = u.path || this.path
     if (options.body) this.parseBody(options.body)
     this.body = undefined
-    if (proxy.usingProxy) {
-      this.agent = proxy.agent(u)
-      if (this.agent) debug('proxy: %j', this.agent.options)
-    }
+    this.agent = proxy.agent(this.protocol === 'https:')
+    if (this.agent) debug('proxy: %j', this.agent.options)
   }
 
   async _request (retries: number = 0) {
