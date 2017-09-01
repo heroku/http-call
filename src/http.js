@@ -175,8 +175,8 @@ export default class HTTP {
    * @example
    * ```js
    * const http = require('http-call')
-   * let rsp = await http.get('https://google.com')
-   * rsp.on('data', console.log)
+   * let {response} = await http.get('https://google.com')
+   * response.on('data', console.log)
    * ```
    */
   static stream (url: string, options: HTTPRequestOptions = {}) {
