@@ -292,3 +292,26 @@ export class HTTPError extends Error {
     this.body = body
   }
 }
+
+// commonjs helpers
+export function get (url: string, options: HTTPRequestOptions = {}) {
+  return HTTP.get(url, options)
+}
+export function post (url: string, options: HTTPRequestOptions = {}) {
+  return HTTP.post(url, options)
+}
+export function put (url: string, options: HTTPRequestOptions = {}) {
+  return HTTP.put(url, options)
+}
+export function patch (url: string, options: HTTPRequestOptions = {}) {
+  return HTTP.patch(url, options)
+}
+export function hdelete (url: string, options: HTTPRequestOptions = {}) {
+  return HTTP.delete(url, options)
+}
+export function stream (url: string, options: HTTPRequestOptions = {}) {
+  return HTTP.stream(url, options)
+}
+export function request (url: string, options: HTTPRequestOptions = {}) {
+  return HTTP.request(url, options)
+}
