@@ -2,6 +2,7 @@
   "plugins": [
     "transform-flow-strip-types",
     "transform-es2015-modules-commonjs",
-    "transform-class-properties"
+    "transform-class-properties",
+    "syntax-object-rest-spread"
   ]
 }

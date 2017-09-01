@@ -10,7 +10,7 @@ nock.disableNetConnect()
 let api
 
 beforeEach(() => {
-  api = nock('https://api.dickeyxxx.com')
+  api = nock('https://api.jdxcode.com')
 })
 
 afterEach(() => {
@@ -21,39 +21,47 @@ describe('HTTP.get()', () => {
   test('makes a GET request', async () => {
     api.get('/')
       .reply(200, {message: 'ok'})
-    let rsp = await get('https://api.dickeyxxx.com')
-    expect(rsp).toEqual({message: 'ok'})
+    let {body} = await get('https://api.jdxcode.com')
+    expect(body).toEqual({message: 'ok'})
+  })
+
+  test('gets headers', async () => {
+    api.get('/')
+      .reply(200, {message: 'ok'}, {myheader: 'ok'})
+    let {body, headers} = await get('https://api.jdxcode.com')
+    expect(body).toEqual({message: 'ok'})
+    expect(headers).toMatchObject({myheader: 'ok'})
   })
 
   test('makes a request to a port', async () => {
-    api = nock('https://api.dickeyxxx.com:3000')
+    api = nock('https://api.jdxcode.com:3000')
     api.get('/')
       .reply(200, {message: 'ok'})
-    let rsp = await get('https://api.dickeyxxx.com:3000')
-    expect(rsp).toEqual({message: 'ok'})
+    let {body} = await get('https://api.jdxcode.com:3000')
+    expect(body).toEqual({message: 'ok'})
   })
 
   test('makes a http GET request', async () => {
-    api = nock('http://api.dickeyxxx.com')
+    api = nock('http://api.jdxcode.com')
     api.get('/')
       .reply(200, {message: 'ok'})
-    let rsp = await get('http://api.dickeyxxx.com')
-    expect(rsp).toEqual({message: 'ok'})
+    let {body} = await get('http://api.jdxcode.com')
+    expect(body).toEqual({message: 'ok'})
   })
 
-  test('can default host by subclassing', async () => {
-    class MyHTTP extends HTTP {host = 'api.dickeyxxx.com'}
+  test('can build a new default class', async () => {
+    const MyHTTP = HTTP.defaults({host: 'api.jdxcode.com'})
     api.get('/')
       .reply(200, {message: 'ok'})
-    let rsp = await MyHTTP.get('/')
-    expect(rsp).toEqual({message: 'ok'})
+    let {body} = await MyHTTP.get('/')
+    expect(body).toEqual({message: 'ok'})
   })
 
   test('sets user-agent header', async () => {
     api.get('/')
       .matchHeader('user-agent', `http-call/${pjson.version} node-${process.version}`)
       .reply(200, {message: 'ok'})
-    await get('https://api.dickeyxxx.com')
+    await get('https://api.jdxcode.com')
   })
 
   test('sets custom headers', async () => {
@@ -61,7 +69,7 @@ describe('HTTP.get()', () => {
       .matchHeader('foo', 'bar')
       .reply(200)
     let headers = {foo: 'bar'}
-    await get('https://api.dickeyxxx.com', {headers})
+    await get('https://api.jdxcode.com', {headers})
   })
 
   describe('wait mocked out', () => {
@@ -81,8 +89,8 @@ describe('HTTP.get()', () => {
       api.get('/').replyWithError({message: 'timed out 3', code: 'ETIMEDOUT'})
       api.get('/').replyWithError({message: 'timed out 4', code: 'ETIMEDOUT'})
       api.get('/').reply(200, {message: 'foo'})
-      let rsp = await get('https://api.dickeyxxx.com')
-      expect(rsp).toEqual({message: 'foo'})
+      let {body} = await get('https://api.jdxcode.com')
+      expect(body).toEqual({message: 'foo'})
     })
 
     test('retries 5 times on ETIMEDOUT', async () => {
@@ -94,7 +102,7 @@ describe('HTTP.get()', () => {
       api.get('/').replyWithError({message: 'timed out 5', code: 'ETIMEDOUT'})
       api.get('/').replyWithError({message: 'timed out 6', code: 'ETIMEDOUT'})
       try {
-        await get('https://api.dickeyxxx.com')
+        await get('https://api.jdxcode.com')
       } catch (err) {
         expect(err.message).toEqual('timed out 6')
       }
@@ -104,15 +112,15 @@ describe('HTTP.get()', () => {
   test('retries on ENOTFOUND', async () => {
     api.get('/').replyWithError({message: 'not found', code: 'ENOTFOUND'})
     api.get('/').reply(200, {message: 'foo'})
-    let r = await get('https://api.dickeyxxx.com')
-    expect(r).toMatchObject({message: 'foo'})
+    let {body} = await get('https://api.jdxcode.com')
+    expect(body).toMatchObject({message: 'foo'})
   })
 
   test('errors on EFOOBAR', async () => {
     expect.assertions(1)
     api.get('/').replyWithError({message: 'oom', code: 'OUT_OF_MEM'})
     try {
-      await get('https://api.dickeyxxx.com')
+      await get('https://api.jdxcode.com')
     } catch (err) {
       expect(err.message).toEqual('oom')
     }
@@ -123,10 +131,10 @@ describe('HTTP.get()', () => {
     api.get('/')
       .reply(404, 'oops! not found')
     try {
-      await get('https://api.dickeyxxx.com')
+      await get('https://api.jdxcode.com')
     } catch (err) {
       expect(err.statusCode).toEqual(404)
-      expect(err.message).toEqual(`HTTP Error 404 for GET https://api.dickeyxxx.com:443/
+      expect(err.message).toEqual(`HTTP Error 404 for GET https://api.jdxcode.com:443/
 oops! not found`)
     }
   })
@@ -136,10 +144,10 @@ oops! not found`)
     api.get('/')
       .reply(404, {message: 'uh oh', otherinfo: [1, 2, 3]})
     try {
-      await get('https://api.dickeyxxx.com')
+      await get('https://api.jdxcode.com')
     } catch (err) {
       expect(err.statusCode).toEqual(404)
-      expect(err.message).toEqual(`HTTP Error 404 for GET https://api.dickeyxxx.com:443/
+      expect(err.message).toEqual(`HTTP Error 404 for GET https://api.jdxcode.com:443/
 uh oh`)
       expect(err.body).toMatchObject({otherinfo: [1, 2, 3]})
     }
@@ -150,12 +158,39 @@ uh oh`)
     api.get('/')
       .reply(404, {otherinfo: [1, 2, 3]})
     try {
-      await get('https://api.dickeyxxx.com')
+      await get('https://api.jdxcode.com')
     } catch (err) {
       expect(err.statusCode).toEqual(404)
-      expect(err.message).toEqual(`HTTP Error 404 for GET https://api.dickeyxxx.com:443/
+      expect(err.message).toEqual(`HTTP Error 404 for GET https://api.jdxcode.com:443/
 { otherinfo: [ 1, 2, 3 ] }`)
       expect(err.body).toMatchObject({otherinfo: [1, 2, 3]})
+    }
+  })
+
+  test('follows redirect', async () => {
+    api.get('/foo1').reply(302, null, {Location: 'https://api.jdxcode.com/foo2'})
+    api.get('/foo2').reply(302, null, {Location: 'https://api.jdxcode.com/foo3'})
+    api.get('/foo3').reply(200, {success: true})
+    await get('https://api.jdxcode.com/foo1')
+  })
+
+  test('follows redirect only 10 times', async () => {
+    api.get('/foo1').reply(302, null, {Location: 'https://api.jdxcode.com/foo2'})
+    api.get('/foo2').reply(302, null, {Location: 'https://api.jdxcode.com/foo3'})
+    api.get('/foo3').reply(302, null, {Location: 'https://api.jdxcode.com/foo4'})
+    api.get('/foo4').reply(302, null, {Location: 'https://api.jdxcode.com/foo5'})
+    api.get('/foo5').reply(302, null, {Location: 'https://api.jdxcode.com/foo6'})
+    api.get('/foo6').reply(302, null, {Location: 'https://api.jdxcode.com/foo7'})
+    api.get('/foo7').reply(302, null, {Location: 'https://api.jdxcode.com/foo8'})
+    api.get('/foo8').reply(302, null, {Location: 'https://api.jdxcode.com/foo9'})
+    api.get('/foo9').reply(302, null, {Location: 'https://api.jdxcode.com/foo10'})
+    api.get('/foo10').reply(302, null, {Location: 'https://api.jdxcode.com/foo11'})
+    api.get('/foo11').reply(302, null, {Location: 'https://api.jdxcode.com/foo12'})
+    expect.assertions(1)
+    try {
+      await get('https://api.jdxcode.com/foo1')
+    } catch (err) {
+      expect(err.message).toEqual('Redirect loop at https://api.jdxcode.com:443/foo11')
     }
   })
 })
@@ -164,17 +199,17 @@ describe('HTTP.post()', () => {
   test('makes a POST request', async () => {
     api.post('/', {'foo': 'bar'})
       .reply(200, {message: 'ok'})
-    let rsp = await post('https://api.dickeyxxx.com', {body: {'foo': 'bar'}})
-    expect(rsp).toEqual({message: 'ok'})
+    let {body} = await post('https://api.jdxcode.com', {body: {'foo': 'bar'}})
+    expect(body).toEqual({message: 'ok'})
   })
   test('does not include a body if no body is passed in', async () => {
     api.post('/')
       .reply(200, {message: 'ok'})
-    let rsp = await post('https://api.dickeyxxx.com')
-    expect(rsp).toEqual({message: 'ok'})
+    let {body} = await post('https://api.jdxcode.com')
+    expect(body).toEqual({message: 'ok'})
   })
   test('faithfully passes custom-encoded content-types', async () => {
-    let apiEncoded = nock('https://api.dickeyxxx.com', {
+    let apiEncoded = nock('https://api.jdxcode.com', {
       reqheaders: {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
@@ -198,8 +233,8 @@ describe('HTTP.post()', () => {
       .post('/', querystring.stringify(body))
       .reply(200, {message: 'ok'})
 
-    let rsp = await post('https://api.dickeyxxx.com/', options)
-    expect(rsp).toEqual({message: 'ok'})
+    let rsp = await post('https://api.jdxcode.com/', options)
+    expect(rsp.body).toEqual({message: 'ok'})
   })
 })
 describe('HTTP.parseBody()', () => {
@@ -215,10 +250,10 @@ describe('HTTP.parseBody()', () => {
     http = new HTTP('www.duckduckgo.com', {'body': body})
   })
   it('sets the Content-Length', () => {
-    expect(http.headers['Content-Length']).toEqual(Buffer.byteLength(JSON.stringify(body)).toString())
+    expect(http.options.headers['Content-Length']).toEqual(Buffer.byteLength(JSON.stringify(body)).toString())
   })
-  it('sets the Content-Type to JSON when Content-Type is unspecificed', () => {
-    expect(http.headers['Content-Type']).toEqual('application/json')
+  it('sets the Content-Type to JSON when Content-Type is unspecified', () => {
+    expect(http.options.headers['content-type']).toEqual('application/json')
   })
   it('does not set the Content Type if it already exists', () => {
     let options = {
@@ -228,13 +263,13 @@ describe('HTTP.parseBody()', () => {
       'body': querystring.stringify(body)
     }
     http = new HTTP('www.duckduckgo.com', options)
-    expect(http.headers['Content-Type']).toEqual(options.headers['Content-Type'])
+    expect(http.options.headers['content-type']).toEqual('application/x-www-form-urlencoded')
   })
   it('resets the value for http.body object', () => {
     expect(http.body).toBe(undefined)
   })
   it('sets the requestBody to the body contents', () => {
-    expect(http.requestBody).toBe(JSON.stringify(body))
+    expect(http.options.body).toBe(JSON.stringify(body))
   })
 
   describe('with next-range header', () => {
@@ -253,8 +288,8 @@ describe('HTTP.parseBody()', () => {
         .reply(206, [7, 8, 9])
     })
     test('gets next body when next-range is set', async () => {
-      let rsp = await get('https://api.dickeyxxx.com')
-      expect(rsp).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
+      let {body} = await get('https://api.jdxcode.com')
+      expect(body).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
     })
   })
 })
@@ -263,8 +298,8 @@ describe('HTTP.put()', () => {
   test('makes a PUT request', async () => {
     api.put('/', {'foo': 'bar'})
       .reply(200, {message: 'ok'})
-    let rsp = await put('https://api.dickeyxxx.com', {body: {'foo': 'bar'}})
-    expect(rsp).toEqual({message: 'ok'})
+    let {body} = await put('https://api.jdxcode.com', {body: {'foo': 'bar'}})
+    expect(body).toEqual({message: 'ok'})
   })
 })
 
@@ -272,8 +307,8 @@ describe('HTTP.patch()', () => {
   test('makes a PATCH request', async () => {
     api.patch('/', {'foo': 'bar'})
       .reply(200, {message: 'ok'})
-    let rsp = await patch('https://api.dickeyxxx.com', {body: {'foo': 'bar'}})
-    expect(rsp).toEqual({message: 'ok'})
+    let {body} = await patch('https://api.jdxcode.com', {body: {'foo': 'bar'}})
+    expect(body).toEqual({message: 'ok'})
   })
 })
 
@@ -281,19 +316,19 @@ describe('HTTP.delete()', () => {
   test('makes a DELETE request', async () => {
     api.delete('/', {'foo': 'bar'})
       .reply(200, {message: 'ok'})
-    let rsp = await hdelete('https://api.dickeyxxx.com', {body: {'foo': 'bar'}})
-    expect(rsp).toEqual({message: 'ok'})
+    let {body} = await hdelete('https://api.jdxcode.com', {body: {'foo': 'bar'}})
+    expect(body).toEqual({message: 'ok'})
   })
 })
 
 describe('HTTP.stream()', () => {
   test('streams a response', async done => {
-    api = nock('http://api.dickeyxxx.com')
+    api = nock('http://api.jdxcode.com')
     api.get('/')
       .reply(200, {message: 'ok'})
-    let rsp = await stream('http://api.dickeyxxx.com')
-    rsp.setEncoding('utf8')
-    rsp.on('data', data => expect(data).toEqual('{"message":"ok"}'))
-    rsp.on('end', done)
+    let {response} = await stream('http://api.jdxcode.com')
+    response.setEncoding('utf8')
+    response.on('data', data => expect(data).toEqual('{"message":"ok"}'))
+    response.on('end', done)
   })
 })

@@ -21,7 +21,3 @@ jobs:
           paths:
             - /tmp/http-call/node_modules
             - /usr/local/share/.cache/yarn
-      - save_cache:
-          key: http-call-{{ .Branch}}
-          paths:
-            - /usr/local/share/.cache/yarn

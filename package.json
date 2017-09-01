@@ -5,21 +5,22 @@
   "author": "Jeff Dickey @dickeyxxx",
   "bugs": "https://github.com/dickeyxxx/http-call/issues",
   "dependencies": {
-    "debug": "^3.0.0",
+    "debug": "^3.0.1",
     "is-retry-allowed": "^1.1.0",
     "is-stream": "^1.1.0",
     "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
-    "babel-cli": "6.24.1",
-    "babel-core": "^6.25.0",
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
     "babel-eslint": "7.2.3",
     "babel-jest": "20.0.3",
+    "babel-plugin-syntax-object-rest-spread": "^6.13.0",
     "babel-plugin-transform-class-properties": "6.24.1",
-    "babel-plugin-transform-es2015-modules-commonjs": "6.24.1",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
     "babel-plugin-transform-flow-strip-types": "6.22.0",
-    "flow-bin": "^0.52.0",
-    "flow-copy-source": "^1.2.0",
+    "flow-bin": "0.52.0",
+    "flow-copy-source": "^1.2.1",
     "flow-typed": "^2.1.5",
     "jest": "20.0.4",
     "jsdoc-babel": "0.3.0",
@@ -35,11 +36,6 @@
     "lib"
   ],
   "homepage": "https://github.com/dickeyxxx/http-call",
-  "jest": {
-    "testEnvironment": "node",
-    "coverageDirectory": "./coverage/",
-    "collectCoverage": true
-  },
   "keywords": [
     "http",
     "request",
@@ -66,7 +62,8 @@
       "http$IncomingMessage",
       "http$ClientRequest",
       "$Diff",
-      "$Shape"
+      "$Shape",
+      "Class"
     ],
     "ignore": [
       "flow-typed"

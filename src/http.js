@@ -8,7 +8,7 @@ import https from 'https'
 import proxy from './proxy'
 import isStream from 'is-stream'
 
-const debug = require('debug')('http-call')
+const debug = require('debug')('http')
 
 function concat (stream) {
   return new Promise(resolve => {
@@ -30,16 +30,62 @@ type Protocol = | 'https:' | 'http:'
  * @property {(boolean)} partial - do not make continuous requests while receiving a Next-Range header for GET requests
  * @property {(number)} port - port to use
  */
-export type HTTPRequestOptions = $Shape<{
-  method: Method,
-  headers: Headers,
+export type HTTPRequestOptions = {
+  method?: Method,
+  headers?: Headers,
   raw?: boolean,
   host?: string,
   port?: number,
   protocol?: Protocol,
   body?: any,
-  partial?: boolean
-}>
+  partial?: boolean,
+  agent?: any
+}
+
+type HTTPRequest = {
+  method: Method,
+  headers: Headers,
+  raw: boolean,
+  host: string,
+  port: number,
+  protocol: Protocol,
+  body?: any,
+  partial: boolean,
+  path: string,
+  agent?: any
+}
+
+function caseInsensitiveObject (): Object {
+  let lowercaseKey = k => (typeof k === 'string') ? k.toLowerCase() : k
+  return new Proxy(({}: any), {
+    get: (t, k) => {
+      k = lowercaseKey(k)
+      return t[k]
+    },
+    set: (t, k, v) => {
+      k = lowercaseKey(k)
+      t[k] = v
+      return true
+    },
+    deleteProperty: (t, k) => {
+      k = lowercaseKey(k)
+      if (k in t) return false
+      return delete t[k]
+    },
+    has: function (t, k) {
+      k = lowercaseKey(k)
+      return k in t
+    }
+  })
+}
+
+function lowercaseHeaders (headers: Headers) {
+  let newHeaders = caseInsensitiveObject()
+  for (let [k, v] of Object.entries(headers)) {
+    newHeaders[k] = (v: any)
+  }
+  return newHeaders
+}
 
 /**
  * Utility for simple HTTP calls
@@ -57,10 +103,8 @@ export default class HTTP {
    * await http.get('https://google.com')
    * ```
    */
-  static async get (url, options: HTTPRequestOptions = {}) {
-    options.method = 'GET'
-    let http = await this.request(url, options)
-    return this._getNextBody(http)
+  static get (url, options: HTTPRequestOptions = {}) {
+    return this.request(url, {...options, method: 'GET'})
   }
 
   /**
@@ -74,10 +118,8 @@ export default class HTTP {
    * await http.post('https://google.com')
    * ```
    */
-  static async post (url, options: HTTPRequestOptions = {}) {
-    options.method = 'POST'
-    let http = await this.request(url, options)
-    return http.body
+  static post (url, options: HTTPRequestOptions = {}) {
+    return this.request(url, {...options, method: 'POST'})
   }
 
   /**
@@ -91,10 +133,8 @@ export default class HTTP {
    * await http.put('https://google.com')
    * ```
    */
-  static async put (url, options: HTTPRequestOptions = {}) {
-    options.method = 'PUT'
-    let http = await this.request(url, options)
-    return http.body
+  static put (url, options: HTTPRequestOptions = {}) {
+    return this.request(url, {...options, method: 'PUT'})
   }
 
   /**
@@ -109,9 +149,7 @@ export default class HTTP {
    * ```
    */
   static async patch (url, options: HTTPRequestOptions = {}) {
-    options.method = 'PATCH'
-    let http = await this.request(url, options)
-    return http.body
+    return this.request(url, {...options, method: 'PATCH'})
   }
 
   /**
@@ -126,9 +164,7 @@ export default class HTTP {
    * ```
    */
   static async delete (url, options: HTTPRequestOptions = {}) {
-    options.method = 'DELETE'
-    let http = await this.request(url, options)
-    return http.body
+    return this.request(url, {...options, method: 'DELETE'})
   }
 
   /**
@@ -143,11 +179,8 @@ export default class HTTP {
    * rsp.on('data', console.log)
    * ```
    */
-  static async stream (url: string, options: HTTPRequestOptions = {}) {
-    options.method = options.method || 'GET'
-    options.raw = true
-    let http = await this.request(url, options)
-    return http.response
+  static stream (url: string, options: HTTPRequestOptions = {}) {
+    return this.request(url, {...options, raw: true})
   }
 
   static async request (url: string, options: HTTPRequestOptions = {}): Promise<this> {
@@ -156,119 +189,212 @@ export default class HTTP {
     return http
   }
 
-  method: Method = 'GET'
-  host = 'localhost'
-  port = 0
-  protocol = 'https:'
-  path = '/'
-  raw = false
-  partial = false
-  headers: Headers = {
-    'user-agent': `${pjson.name}/${pjson.version} node-${process.version}`
+  static defaults (options: HTTPRequestOptions = {}): Class<HTTP> {
+    return class CustomHTTP extends HTTP {
+      get defaultOptions () {
+        return {
+          ...super.defaultOptions,
+          ...options
+        }
+      }
+    }
   }
+
+  // instance properties
+
   response: http$IncomingMessage
   request: http$ClientRequest
-  requestBody: any
   body: any
-  agent: any
-  options: HTTPRequestOptions
+  options: HTTPRequest
+  get method (): Method {
+    return this.options.method
+  }
+  get statusCode (): number {
+    if (!this.response) return 0
+    return this.response.statusCode
+  }
+  get secure (): boolean {
+    return this.options.protocol === 'https:'
+  }
+  get url (): string {
+    return `${this.options.protocol}//${this.options.host}${this.options.path}`
+  }
+  set url (input: string) {
+    let u = uri.parse(input)
+    this.options.protocol = (u.protocol: any) || this.options.protocol
+    this.options.host = u.hostname || this.defaultOptions.host || 'localhost'
+    this.options.path = u.path || '/'
+    this.options.agent = this.options.agent || proxy.agent(this.secure)
+    this.options.port = parseInt(u.port || this.defaultOptions.port || (this.secure ? 443 : 80))
+  }
+  get headers (): Headers {
+    if (!this.response) return {}
+    return this.response.headers
+  }
+  get partial (): boolean {
+    if (this.method !== 'GET' || this.options.partial) return true
+    return !(this.headers['next-range'] && this.body instanceof Array)
+  }
+  get defaultOptions (): HTTPRequestOptions {
+    return {
+      method: 'GET',
+      host: 'localhost',
+      protocol: 'https:',
+      path: '/',
+      raw: false,
+      partial: false,
+      headers: {
+        'user-agent': `${pjson.name}/${pjson.version} node-${process.version}`
+      }
+    }
+  }
 
   constructor (url: string, options: HTTPRequestOptions = {}) {
+    this.options = ({
+      ...this.defaultOptions,
+      ...options,
+      headers: lowercaseHeaders({
+        ...this.defaultOptions.headers,
+        ...options.headers
+      })
+    }: any)
     if (!url) throw new Error('no url provided')
-    this.options = options
-    let headers = Object.assign(this.headers, options.headers)
-    Object.assign(this, options)
-    this.headers = headers
-    let u = uri.parse(url)
-    this.protocol = u.protocol || this.protocol
-    this.host = u.hostname || this.host
-    this.port = u.port || this.port || (this.protocol === 'https:' ? 443 : 80)
-    this.path = u.path || this.path
-    if (options.body) this.parseBody(options.body)
-    this.body = undefined
-    this.agent = proxy.agent(this.protocol === 'https:')
-    if (this.agent) debug('proxy: %j', this.agent.options)
+    this.url = url
+    if (this.options.body) this._parseBody(this.options.body)
   }
 
-  async _request (retries: number = 0) {
+  async _request () {
+    this._debugRequest()
     try {
-      debug(`--> ${this.method} ${this.url}`)
-      this.response = await this.performRequest()
-      debug(`<-- ${this.method} ${this.url} ${this.response.statusCode}`)
+      this.response = await this._performRequest()
     } catch (err) {
-      return this.maybeRetry(err, retries)
+      return this._maybeRetry(err)
     }
-    if (this.response.statusCode >= 200 && this.response.statusCode < 300) {
-      if (!this.raw) this.body = await this.parse(this.response)
-    } else throw new HTTPError(this, await this.parse(this.response))
+    if (this._shouldParseResponseBody) await this._parse()
+    this._debugResponse()
+    if (this._responseRedirect) return this._redirect()
+    if (!this._responseOK) {
+      throw new HTTPError(this)
+    }
+    if (!this.partial) await this._getNextRange()
   }
 
-  async maybeRetry (err: Error, retries: number) {
+  _redirectRetries: number
+  async _redirect () {
+    if (!this._redirectRetries) this._redirectRetries = 0
+    this._redirectRetries++
+    if (this._redirectRetries > 10) throw new Error(`Redirect loop at ${this.url}`)
+    if (!this.headers.location) throw new Error('Redirect with no location header')
+    this.url = this.headers.location
+    await this._request()
+  }
+
+  _errorRetries: number
+  async _maybeRetry (err: Error) {
+    if (!this._errorRetries) this._errorRetries = 0
+    this._errorRetries++
     const allowed = (err: Error): boolean => {
-      if (retries >= 5) return false
+      if (this._errorRetries > 5) return false
       if (!err.code) return false
       if (err.code === 'ENOTFOUND') return true
       return require('is-retry-allowed')(err)
     }
     if (allowed(err)) {
       let noise = Math.random() * 100
-      await this._wait((1 << retries) * 1000 + noise)
-      await this._request(retries + 1)
+      await this._wait((1 << this._errorRetries) * 1000 + noise)
+      await this._request()
       return
     }
     throw err
   }
 
-  get http (): (typeof http | typeof https) {
-    return this.protocol === 'https:' ? https : http
+  _debugRequest () {
+    if (this.options.agent) debug('proxy: %o', this.options.agent.options)
+    debug('--> %s %s %O', this.options.method, this.url, this._redactedHeaders(this.options.headers))
   }
 
-  get url (): string {
-    return `${this.protocol}//${this.host}${this.path}`
+  _debugResponse () {
+    if (this.body) {
+      debug('<-- %s %s %s\nHeaders: %O\nBody: %O',
+        this.method,
+        this.url,
+        this.statusCode,
+        this._redactedHeaders(this.headers),
+        this.body)
+    } else {
+      debug('<-- %s %s %s\nHeaders: %O\nBody: %O',
+        this.method,
+        this.url,
+        this.statusCode,
+        this._redactedHeaders(this.headers),
+        this.body)
+    }
   }
 
-  performRequest () {
+  _performRequest () {
     return new Promise((resolve, reject) => {
-      this.request = this.http.request(this, resolve)
+      this.request = this._http.request(this.options, resolve)
       this.request.on('error', reject)
-      if (isStream.readable(this.requestBody)) {
-        this.requestBody.pipe(this.request)
+      if (this.options.body && isStream.readable(this.options.body)) {
+        this.options.body.pipe(this.request)
       } else {
-        this.request.end(this.requestBody)
+        this.request.end(this.options.body)
       }
     })
   }
 
-  async parse (response: http$IncomingMessage) {
-    let body = await concat(response)
-    return response.headers['content-type'] === 'application/json'
-      ? JSON.parse(body) : body
+  async _parse () {
+    this.body = await concat(this.response)
+    let json = this.headers['content-type'] === 'application/json'
+    if (json) this.body = JSON.parse(this.body)
   }
 
-  parseBody (body: Object) {
+  _parseBody (body: Object) {
     if (isStream.readable(body)) {
-      this.requestBody = body
+      this.options.body = body
       return
     }
-    if (!this.headers['Content-Type']) {
-      this.headers['Content-Type'] = 'application/json'
+    if (!this.options.headers['content-type']) {
+      this.options.headers['content-type'] = 'application/json'
     }
 
-    if (this.headers['Content-Type'] === 'application/json') {
-      this.requestBody = JSON.stringify(body)
+    if (this.options.headers['content-type'] === 'application/json') {
+      this.options.body = JSON.stringify(body)
     } else {
-      this.requestBody = body
+      this.options.body = body
     }
-    this.headers['Content-Length'] = Buffer.byteLength(this.requestBody).toString()
+    this.options.headers['content-length'] = Buffer.byteLength(this.options.body).toString()
   }
 
-  static async _getNextBody (http: this) {
-    if (http.partial || !http.response.headers['next-range'] || !(http.body instanceof Array)) return http.body
-    let opts: HTTPRequestOptions = {headers: {}}
-    opts = Object.assign(opts, http.options)
-    opts.headers['range'] = http.response.headers['next-range']
-    let next = await this.get(http.url, opts)
-    return http.body.concat(next)
+  async _getNextRange () {
+    this.options.headers['range'] = this.headers['next-range']
+    let prev = this.body
+    await this._request()
+    this.body = prev.concat(this.body)
+  }
+
+  _redactedHeaders (headers: Headers) {
+    headers = {...headers}
+    if (headers.authorization) headers.authorization = '[REDACTED]'
+    return headers
+  }
+
+  get _http (): (typeof http | typeof https) {
+    return this.secure ? https : http
+  }
+
+  get _responseOK (): boolean {
+    if (!this.response) return false
+    return this.statusCode >= 200 && this.statusCode < 300
+  }
+
+  get _responseRedirect (): boolean {
+    if (!this.response) return false
+    return this.statusCode >= 300 && this.statusCode < 400
+  }
+
+  get _shouldParseResponseBody (): boolean {
+    return !this._responseOK || (!this.options.raw && this._responseOK)
   }
 
   _wait (ms: number) {
@@ -282,18 +408,18 @@ export class HTTPError extends Error {
   body: any
   __httpcall = true
 
-  constructor (http: HTTP, body: any) {
+  constructor (http: HTTP) {
     let message
-    if (typeof body === 'string' || typeof body.message === 'string') message = body.message || body
-    else message = util.inspect(body)
-    super(`HTTP Error ${http.response.statusCode} for ${http.method} ${http.url}\n${message}`)
-    this.statusCode = http.response.statusCode
+    if (typeof http.body === 'string' || typeof http.body.message === 'string') message = http.body.message || http.body
+    else message = util.inspect(http.body)
+    super(`HTTP Error ${http.statusCode} for ${http.method} ${http.url}\n${message}`)
+    this.statusCode = http.statusCode
     this.http = http
-    this.body = body
+    this.body = http.body
   }
 }
 
-// commonjs helpers
+// common/s helpers
 export function get (url: string, options: HTTPRequestOptions = {}) {
   return HTTP.get(url, options)
 }
