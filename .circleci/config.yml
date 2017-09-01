@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: dickeyxxx/cli-engine-docker:v1.0.0
+      - image: node:8
     working_directory: /tmp/http-call
     steps:
       - checkout
