@@ -268,6 +268,7 @@ export default class HTTP {
     try {
       this.response = await this._performRequest()
     } catch (err) {
+      debug(err)
       return this._maybeRetry(err)
     }
     if (this._shouldParseResponseBody) await this._parse()
