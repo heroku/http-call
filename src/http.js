@@ -302,7 +302,7 @@ export default class HTTP {
     }
     if (allowed(err)) {
       let noise = Math.random() * 100
-      await this._wait((1 << this._errorRetries) * 1000 + noise)
+      await this._wait((1 << this._errorRetries) * 100 + noise)
       await this._request()
       return
     }
