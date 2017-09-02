@@ -191,11 +191,25 @@ export default class HTTP {
 
   static defaults (options: HTTPRequestOptions = {}): Class<HTTP> {
     return class CustomHTTP extends HTTP {
-      get defaultOptions () {
+      static get defaultOptions () {
         return {
           ...super.defaultOptions,
           ...options
         }
+      }
+    }
+  }
+
+  static get defaultOptions (): HTTPRequestOptions {
+    return {
+      method: 'GET',
+      host: 'localhost',
+      protocol: 'https:',
+      path: '/',
+      raw: false,
+      partial: false,
+      headers: {
+        'user-agent': `${pjson.name}/${pjson.version} node-${process.version}`
       }
     }
   }
@@ -222,10 +236,10 @@ export default class HTTP {
   set url (input: string) {
     let u = uri.parse(input)
     this.options.protocol = (u.protocol: any) || this.options.protocol
-    this.options.host = u.hostname || this.defaultOptions.host || 'localhost'
+    this.options.host = u.hostname || this.constructor.defaultOptions.host || 'localhost'
     this.options.path = u.path || '/'
     this.options.agent = this.options.agent || proxy.agent(this.secure)
-    this.options.port = parseInt(u.port || this.defaultOptions.port || (this.secure ? 443 : 80))
+    this.options.port = parseInt(u.port || this.constructor.defaultOptions.port || (this.secure ? 443 : 80))
   }
   get headers (): Headers {
     if (!this.response) return {}
@@ -235,26 +249,12 @@ export default class HTTP {
     if (this.method !== 'GET' || this.options.partial) return true
     return !(this.headers['next-range'] && this.body instanceof Array)
   }
-  get defaultOptions (): HTTPRequestOptions {
-    return {
-      method: 'GET',
-      host: 'localhost',
-      protocol: 'https:',
-      path: '/',
-      raw: false,
-      partial: false,
-      headers: {
-        'user-agent': `${pjson.name}/${pjson.version} node-${process.version}`
-      }
-    }
-  }
-
   constructor (url: string, options: HTTPRequestOptions = {}) {
     this.options = ({
-      ...this.defaultOptions,
+      ...this.constructor.defaultOptions,
       ...options,
       headers: lowercaseHeaders({
-        ...this.defaultOptions.headers,
+        ...this.constructor.defaultOptions.headers,
         ...options.headers
       })
     }: any)
