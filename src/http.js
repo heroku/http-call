@@ -9,6 +9,8 @@ import proxy from './proxy'
 import isStream from 'is-stream'
 
 const debug = require('debug')('http')
+const debugHeaders = require('debug')('http:headers')
+const debugBody = require('debug')('http:body')
 
 function concat (stream) {
   return new Promise(resolve => {
@@ -311,25 +313,15 @@ export default class HTTP {
 
   _debugRequest () {
     if (this.options.agent) debug('proxy: %o', this.options.agent.options)
-    debug('--> %s %s %O', this.options.method, this.url, this._redactedHeaders(this.options.headers))
+    debug('--> %s %s', this.options.method, this.url)
+    debugHeaders(this._redactedHeaders(this.options.headers))
+    if (this.options.body) debugBody(this.options.body)
   }
 
   _debugResponse () {
-    if (this.body) {
-      debug('<-- %s %s %s\nHeaders: %O\nBody: %O',
-        this.method,
-        this.url,
-        this.statusCode,
-        this._redactedHeaders(this.headers),
-        this.body)
-    } else {
-      debug('<-- %s %s %s\nHeaders: %O\nBody: %O',
-        this.method,
-        this.url,
-        this.statusCode,
-        this._redactedHeaders(this.headers),
-        this.body)
-    }
+    debug('<-- %s %s %s', this.method, this.url, this.statusCode)
+    debugHeaders(this._redactedHeaders(this.headers))
+    if (this.body) debugBody(this.body)
   }
 
   _performRequest () {
