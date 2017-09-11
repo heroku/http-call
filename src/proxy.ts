@@ -1,11 +1,13 @@
-// @flow
-
-import uri from 'url'
-import fs from 'fs'
-import path from 'path'
+import * as uri from 'url'
+import * as fs from 'fs'
+import * as path from 'path'
 
 type ProxyOptions = {
-  proxy: Object,
+  proxy: {
+    host?: string,
+    port?: string,
+    proxyAuth?: string,
+  },
   ca?: Array<Buffer>
 }
 
@@ -29,7 +31,7 @@ export default class ProxyUtil {
   }
 
   static get sslCertFile () : Array<string> {
-    return this.env.SSL_CERT_FILE ? [this.env.SSL_CERT_FILE] : []
+    return this.env.SSL_CERT_FILE ? [this.env.SSL_CERT_FILE] as [string] : []
   }
 
   static get certs () : Array<Buffer> {

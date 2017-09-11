@@ -2,8 +2,8 @@
   "name": "http-call",
   "description": "make http requests",
   "version": "3.0.2",
-  "author": "Jeff Dickey @dickeyxxx",
-  "bugs": "https://github.com/dickeyxxx/http-call/issues",
+  "author": "Jeff Dickey @jdxcode",
+  "bugs": "https://github.com/jdxcode/http-call/issues",
   "dependencies": {
     "debug": "^3.0.1",
     "is-retry-allowed": "^1.1.0",
@@ -11,31 +11,34 @@
     "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-eslint": "7.2.3",
-    "babel-jest": "^21.0.0",
-    "babel-plugin-syntax-object-rest-spread": "^6.13.0",
-    "babel-plugin-transform-class-properties": "6.24.1",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
-    "babel-plugin-transform-flow-strip-types": "6.22.0",
-    "flow-bin": "^0.54.0",
-    "flow-copy-source": "^1.2.1",
-    "flow-typed": "^2.1.5",
+    "@types/is-stream": "^1.1.0",
+    "@types/jest": "^20.0.8",
+    "@types/nock": "^8.2.1",
+    "@types/node": "^8.0.28",
     "jest": "^21.0.1",
-    "jsdoc-babel": "0.3.0",
-    "jsdoc-to-markdown": "3.0.0",
     "nock": "^9.0.14",
     "rimraf": "^2.6.1",
-    "standard": "^10.0.3"
-  },
-  "engines": {
-    "node": ">=8.3.0"
+    "standard": "^10.0.3",
+    "ts-jest": "^21.0.0",
+    "typescript": "^2.5.2"
   },
   "files": [
     "lib"
   ],
-  "homepage": "https://github.com/dickeyxxx/http-call",
+  "homepage": "https://github.com/jdxcode/http-call",
+  "jest": {
+    "coverageReporters": [
+      "json"
+    ],
+    "transform": {
+      "^.+\\.ts$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "\\.test\\.ts$",
+    "moduleFileExtensions": [
+      "js",
+      "ts"
+    ]
+  },
   "keywords": [
     "http",
     "request",
@@ -43,30 +46,12 @@
   ],
   "license": "ISC",
   "main": "lib/http.js",
-  "repository": "dickeyxxx/http-call",
+  "repository": "jdxcode/http-call",
   "scripts": {
-    "build": "babel src -d lib --ignore '*.test.js'",
-    "clean": "rimraf lib",
-    "copy-flow": "flow-copy-source -v -i '*.test.js' src lib",
-    "doc": "jsdoc2md -c doc/jsdoc2md.json --files src/http.js > README.md",
-    "prepare": "npm run clean && npm run build && npm run copy-flow",
-    "test": "jest && flow && standard",
-    "watch": "nodemon -e js -i lib --exec \"npm run prepare\""
-  },
-  "standard": {
-    "parser": "babel-eslint",
-    "env": [
-      "jest"
-    ],
-    "globals": [
-      "http$IncomingMessage",
-      "http$ClientRequest",
-      "$Diff",
-      "$Shape",
-      "Class"
-    ],
-    "ignore": [
-      "flow-typed"
-    ]
+    "coverage": "cat coverage/coverage-final.json | remap-istanbul -o coverage/coverage-final.json && curl -s https://codecov.io/bash | bash",
+    "precommit": "lint-staged",
+    "prepare": "rimraf lib && tsc && rimraf 'lib/**/*.test.js' 'lib/**/*.test.d.ts'",
+    "pretest": "tsc --sourcemap",
+    "test": "jest"
   }
 }

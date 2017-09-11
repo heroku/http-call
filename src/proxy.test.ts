@@ -1,5 +1,3 @@
-// @flow
-
 import Proxy from './proxy'
 
 beforeEach(() => {

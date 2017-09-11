@@ -13,9 +13,8 @@ jobs:
             - http-call-{{ .Branch }}
             - http-call-master
       - run: yarn
-      - run: ./node_modules/.bin/jest --coverage && bash <(curl -s https://codecov.io/bash)
-      - run: ./node_modules/.bin/flow check
-      - run: ./node_modules/.bin/standard
+      - run: yarn test -- --coverage
+      - run: yarn run coverage
       - save_cache:
           key: http-call-{{ .Branch}}-{{checksum "package.json"}}
           paths:

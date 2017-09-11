@@ -1,28 +1,29 @@
-// @flow
-
-import util from 'util'
-import uri from 'url'
-import pjson from '../package.json'
-import http from 'http'
-import https from 'https'
+import 'core-js/library'
+import * as util from 'util'
+import * as uri from 'url'
+import * as http from 'http'
+import * as https from 'https'
 import proxy from './proxy'
-import isStream from 'is-stream'
+import * as isStream from 'is-stream'
 
+const pjson = require('../package.json')
 const debug = require('debug')('http')
 const debugHeaders = require('debug')('http:headers')
 const debugBody = require('debug')('http:body')
 
-function concat (stream) {
+interface IErrorWithCode extends Error {
+  code?: string
+}
+
+function concat (stream: NodeJS.ReadableStream) {
   return new Promise(resolve => {
-    let strings = []
+    let strings: string[] = []
     stream.on('data', data => strings.push(data))
     stream.on('end', () => resolve(strings.join('')))
   })
 }
 
-type Method = | 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
-type Headers = { [key: string]: string }
-type Protocol = | 'https:' | 'http:'
+export type Protocol = | 'https:' | 'http:'
 
 /**
  * @typedef {Object} HTTPRequestOptions
@@ -32,21 +33,18 @@ type Protocol = | 'https:' | 'http:'
  * @property {(boolean)} partial - do not make continuous requests while receiving a Next-Range header for GET requests
  * @property {(number)} port - port to use
  */
-export type HTTPRequestOptions = {
-  method?: Method,
-  headers?: Headers,
+export type FullHTTPRequestOptions = http.ClientRequestArgs & {
   raw?: boolean,
-  host?: string,
-  port?: number,
-  protocol?: Protocol,
   body?: any,
   partial?: boolean,
-  agent?: any
+  headers: http.OutgoingHttpHeaders,
 }
 
+export type HTTPRequestOptions = Partial<FullHTTPRequestOptions>
+
 type HTTPRequest = {
-  method: Method,
-  headers: Headers,
+  method: string,
+  headers: http.OutgoingHttpHeaders,
   raw: boolean,
   host: string,
   port: number,
@@ -57,9 +55,9 @@ type HTTPRequest = {
   agent?: any
 }
 
-function caseInsensitiveObject (): Object {
-  let lowercaseKey = k => (typeof k === 'string') ? k.toLowerCase() : k
-  return new Proxy(({}: any), {
+function caseInsensitiveObject (): {[k: string]: any} {
+  let lowercaseKey = (k: any) => (typeof k === 'string') ? k.toLowerCase() : k
+  return new Proxy(({} as {[k: string]: any}), {
     get: (t, k) => {
       k = lowercaseKey(k)
       return t[k]
@@ -81,10 +79,10 @@ function caseInsensitiveObject (): Object {
   })
 }
 
-function lowercaseHeaders (headers: Headers) {
+function lowercaseHeaders (headers: http.OutgoingHttpHeaders | Object): http.OutgoingHttpHeaders {
   let newHeaders = caseInsensitiveObject()
   for (let [k, v] of Object.entries(headers)) {
-    newHeaders[k] = (v: any)
+    newHeaders[k] = v
   }
   return newHeaders
 }
@@ -93,7 +91,9 @@ function lowercaseHeaders (headers: Headers) {
  * Utility for simple HTTP calls
  * @class
  */
-export default class HTTP {
+export class HTTP {
+  "constructor": typeof HTTP  // Explicitly declare constructor property
+
   /**
    * make an http GET request
    * @param {string} url - url or path to call
@@ -105,7 +105,7 @@ export default class HTTP {
    * await http.get('https://google.com')
    * ```
    */
-  static get (url, options: HTTPRequestOptions = {}) {
+  static get (url: string, options: HTTPRequestOptions = {}) {
     return this.request(url, {...options, method: 'GET'})
   }
 
@@ -120,7 +120,7 @@ export default class HTTP {
    * await http.post('https://google.com')
    * ```
    */
-  static post (url, options: HTTPRequestOptions = {}) {
+  static post (url: string, options: HTTPRequestOptions = {}) {
     return this.request(url, {...options, method: 'POST'})
   }
 
@@ -135,7 +135,7 @@ export default class HTTP {
    * await http.put('https://google.com')
    * ```
    */
-  static put (url, options: HTTPRequestOptions = {}) {
+  static put (url: string, options: HTTPRequestOptions = {}) {
     return this.request(url, {...options, method: 'PUT'})
   }
 
@@ -150,7 +150,7 @@ export default class HTTP {
    * await http.patch('https://google.com')
    * ```
    */
-  static async patch (url, options: HTTPRequestOptions = {}) {
+  static async patch (url: string, options: HTTPRequestOptions = {}) {
     return this.request(url, {...options, method: 'PATCH'})
   }
 
@@ -165,7 +165,7 @@ export default class HTTP {
    * await http.delete('https://google.com')
    * ```
    */
-  static async delete (url, options: HTTPRequestOptions = {}) {
+  static async delete (url: string, options: HTTPRequestOptions = {}) {
     return this.request(url, {...options, method: 'DELETE'})
   }
 
@@ -185,13 +185,13 @@ export default class HTTP {
     return this.request(url, {...options, raw: true})
   }
 
-  static async request (url: string, options: HTTPRequestOptions = {}): Promise<this> {
+  static async request (url: string, options: HTTPRequestOptions = {}): Promise<HTTP> {
     let http = new this(url, options)
     await http._request()
     return http
   }
 
-  static defaults (options: HTTPRequestOptions = {}): Class<HTTP> {
+  static defaults (options: HTTPRequestOptions = {}): typeof HTTP {
     return class CustomHTTP extends HTTP {
       static get defaultOptions () {
         return {
@@ -218,16 +218,16 @@ export default class HTTP {
 
   // instance properties
 
-  response: http$IncomingMessage
-  request: http$ClientRequest
+  response: http.IncomingMessage
+  request: http.ClientRequest
   body: any
-  options: HTTPRequest
-  get method (): Method {
-    return this.options.method
+  options: FullHTTPRequestOptions
+  get method (): string {
+    return this.options.method || 'GET'
   }
   get statusCode (): number {
     if (!this.response) return 0
-    return this.response.statusCode
+    return this.response.statusCode || 0
   }
   get secure (): boolean {
     return this.options.protocol === 'https:'
@@ -237,13 +237,13 @@ export default class HTTP {
   }
   set url (input: string) {
     let u = uri.parse(input)
-    this.options.protocol = (u.protocol: any) || this.options.protocol
+    this.options.protocol = u.protocol || this.options.protocol
     this.options.host = u.hostname || this.constructor.defaultOptions.host || 'localhost'
     this.options.path = u.path || '/'
     this.options.agent = this.options.agent || proxy.agent(this.secure)
-    this.options.port = parseInt(u.port || this.constructor.defaultOptions.port || (this.secure ? 443 : 80))
+    this.options.port = u.port || this.constructor.defaultOptions.port || (this.secure ? 443 : 80)
   }
-  get headers (): Headers {
+  get headers (): http.IncomingMessage["headers"] {
     if (!this.response) return {}
     return this.response.headers
   }
@@ -259,7 +259,7 @@ export default class HTTP {
         ...this.constructor.defaultOptions.headers,
         ...options.headers
       })
-    }: any)
+    })
     if (!url) throw new Error('no url provided')
     this.url = url
     if (this.options.body) this._parseBody(this.options.body)
@@ -288,7 +288,12 @@ export default class HTTP {
     this._redirectRetries++
     if (this._redirectRetries > 10) throw new Error(`Redirect loop at ${this.url}`)
     if (!this.headers.location) throw new Error('Redirect with no location header')
-    this.url = this.headers.location
+    const location = this.headers.location
+    if (Array.isArray(location)) {
+      this.url = location[0]
+    } else {
+      this.url = location
+    }
     await this._request()
   }
 
@@ -296,7 +301,7 @@ export default class HTTP {
   async _maybeRetry (err: Error) {
     if (!this._errorRetries) this._errorRetries = 0
     this._errorRetries++
-    const allowed = (err: Error): boolean => {
+    const allowed = (err: IErrorWithCode): boolean => {
       if (this._errorRetries > 5) return false
       if (!err.code) return false
       if (err.code === 'ENOTFOUND') return true
@@ -312,7 +317,7 @@ export default class HTTP {
   }
 
   _debugRequest () {
-    if (this.options.agent) debug('proxy: %o', this.options.agent.options)
+    if (this.options.agent) debug('proxy: %o', this.options.agent)
     debug('--> %s %s', this.options.method, this.url)
     debugHeaders(this._redactedHeaders(this.options.headers))
     if (this.options.body) debugBody(this.options.body)
@@ -324,9 +329,13 @@ export default class HTTP {
     if (this.body) debugBody(this.body)
   }
 
-  _performRequest () {
+  _performRequest (): Promise<http.IncomingMessage> {
     return new Promise((resolve, reject) => {
-      this.request = this._http.request(this.options, resolve)
+      if (this.secure) {
+        this.request = https.request(this.options, resolve)
+      } else {
+        this.request = http.request(this.options, resolve)
+      }
       this.request.on('error', reject)
       if (this.options.body && isStream.readable(this.options.body)) {
         this.options.body.pipe(this.request)
@@ -360,20 +369,17 @@ export default class HTTP {
   }
 
   async _getNextRange () {
-    this.options.headers['range'] = this.headers['next-range']
+    const next = this.headers['next-range']
+    this.options.headers['range'] = Array.isArray(next) ? next[0] : next
     let prev = this.body
     await this._request()
     this.body = prev.concat(this.body)
   }
 
-  _redactedHeaders (headers: Headers) {
+  _redactedHeaders (headers: http.IncomingHttpHeaders | http.OutgoingHttpHeaders) {
     headers = {...headers}
     if (headers.authorization) headers.authorization = '[REDACTED]'
     return headers
-  }
-
-  get _http (): (typeof http | typeof https) {
-    return this.secure ? https : http
   }
 
   get _responseOK (): boolean {
@@ -402,35 +408,12 @@ export class HTTPError extends Error {
   __httpcall = true
 
   constructor (http: HTTP) {
-    let message
-    if (typeof http.body === 'string' || typeof http.body.message === 'string') message = http.body.message || http.body
-    else message = util.inspect(http.body)
-    super(`HTTP Error ${http.statusCode} for ${http.method} ${http.url}\n${message}`)
+    super()
+    if (typeof http.body === 'string' || typeof http.body.message === 'string') this.message = http.body.message || http.body
+    else this.message = util.inspect(http.body)
+    this.message = `HTTP Error ${http.statusCode} for ${http.method} ${http.url}\n${this.message}`
     this.statusCode = http.statusCode
     this.http = http
     this.body = http.body
   }
-}
-
-// common/s helpers
-export function get (url: string, options: HTTPRequestOptions = {}) {
-  return HTTP.get(url, options)
-}
-export function post (url: string, options: HTTPRequestOptions = {}) {
-  return HTTP.post(url, options)
-}
-export function put (url: string, options: HTTPRequestOptions = {}) {
-  return HTTP.put(url, options)
-}
-export function patch (url: string, options: HTTPRequestOptions = {}) {
-  return HTTP.patch(url, options)
-}
-export function hdelete (url: string, options: HTTPRequestOptions = {}) {
-  return HTTP.delete(url, options)
-}
-export function stream (url: string, options: HTTPRequestOptions = {}) {
-  return HTTP.stream(url, options)
-}
-export function request (url: string, options: HTTPRequestOptions = {}) {
-  return HTTP.request(url, options)
 }
