@@ -54,5 +54,6 @@
     "prepare": "rimraf lib && tsc && rimraf 'lib/**/*.test.js' 'lib/**/*.test.d.ts'",
     "pretest": "tsc --sourcemap",
     "test": "jest"
-  }
+  },
+  "types": "./lib/http.d.ts"
 }
