@@ -17,6 +17,7 @@
     "@types/node": "^8.0.28",
     "jest": "^21.0.1",
     "nock": "^9.0.14",
+    "remap-istanbul": "^0.9.5",
     "rimraf": "^2.6.1",
     "standard": "^10.0.3",
     "ts-jest": "^21.0.0",
