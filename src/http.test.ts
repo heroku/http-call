@@ -26,6 +26,15 @@ describe('HTTP.get()', () => {
     expect(body).toEqual({message: 'ok'})
   })
 
+  test('makes a GET request', async () => {
+    api.get('/')
+      .reply(200, {message: 'ok'}, {
+        'content-type': 'application/json; charset=utf-8'
+      })
+    let {body} = await HTTP.get('https://api.jdxcode.com')
+    expect(body).toEqual({message: 'ok'})
+  })
+
   test('gets headers', async () => {
     api.get('/')
       .reply(200, {message: 'ok'}, {myheader: 'ok'})

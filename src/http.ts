@@ -1,10 +1,9 @@
 import 'core-js/library'
 import * as util from 'util'
 import * as uri from 'url'
-import * as http from 'http'
-import * as https from 'https'
-import proxy from './proxy'
-import * as isStream from 'is-stream'
+import http = require('http')
+
+import {deps} from './deps'
 
 const pjson = require('../package.json')
 const debug = require('debug')('http')
@@ -21,6 +20,10 @@ function concat (stream: NodeJS.ReadableStream) {
     stream.on('data', data => strings.push(data))
     stream.on('end', () => resolve(strings.join('')))
   })
+}
+
+function stringOrFirstString (o: string | string[]): string {
+  return Array.isArray(o) ? o[0] : o
 }
 
 export type Protocol = | 'https:' | 'http:'
@@ -240,7 +243,7 @@ export class HTTP {
     this.options.protocol = u.protocol || this.options.protocol
     this.options.host = u.hostname || this.constructor.defaultOptions.host || 'localhost'
     this.options.path = u.path || '/'
-    this.options.agent = this.options.agent || proxy.agent(this.secure)
+    this.options.agent = this.options.agent || deps.proxy.agent(this.secure)
     this.options.port = u.port || this.constructor.defaultOptions.port || (this.secure ? 443 : 80)
   }
   get headers (): http.IncomingMessage["headers"] {
@@ -332,12 +335,12 @@ export class HTTP {
   _performRequest (): Promise<http.IncomingMessage> {
     return new Promise((resolve, reject) => {
       if (this.secure) {
-        this.request = https.request(this.options, resolve)
+        this.request = deps.https.request(this.options, resolve)
       } else {
-        this.request = http.request(this.options, resolve)
+        this.request = deps.http.request(this.options, resolve)
       }
       this.request.on('error', reject)
-      if (this.options.body && isStream.readable(this.options.body)) {
+      if (this.options.body && deps.isStream.readable(this.options.body)) {
         this.options.body.pipe(this.request)
       } else {
         this.request.end(this.options.body)
@@ -347,12 +350,12 @@ export class HTTP {
 
   async _parse () {
     this.body = await concat(this.response)
-    let json = this.headers['content-type'] === 'application/json'
+    let json = deps.mime.contentType(stringOrFirstString(this.headers['content-type'])) === deps.mime.contentType('application/json')
     if (json) this.body = JSON.parse(this.body)
   }
 
   _parseBody (body: Object) {
-    if (isStream.readable(body)) {
+    if (deps.isStream.readable(body)) {
       this.options.body = body
       return
     }
