@@ -1,4 +1,3 @@
-import 'core-js/library'
 import * as util from 'util'
 import * as uri from 'url'
 import http = require('http')
