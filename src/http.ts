@@ -407,7 +407,7 @@ export class HTTPError extends Error {
   statusCode: number
   http: HTTP
   body: any
-  __httpcall = true
+  __httpcall = pjson.version
 
   constructor (http: HTTP) {
     super()
