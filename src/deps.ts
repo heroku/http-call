@@ -1,5 +1,5 @@
 import proxy = require('./proxy')
-import mime = require('mime-types')
+import contentType = require('content-type')
 import http = require('http')
 import https = require('https')
 
@@ -10,8 +10,8 @@ export const deps = {
   get isStream(): any {
     return fetch('is-stream')
   },
-  get mime(): typeof mime {
-    return fetch('mime-types')
+  get contentType(): typeof contentType {
+    return fetch('content-type')
   },
   get http(): typeof http {
     return fetch('http')

@@ -21,10 +21,6 @@ function concat (stream: NodeJS.ReadableStream) {
   })
 }
 
-function stringOrFirstString (o: string | string[]): string {
-  return Array.isArray(o) ? o[0] : o
-}
-
 export type Protocol = | 'https:' | 'http:'
 
 /**
@@ -349,7 +345,7 @@ export class HTTP {
 
   async _parse () {
     this.body = await concat(this.response)
-    let json = deps.mime.contentType(stringOrFirstString(this.headers['content-type'])) === deps.mime.contentType('application/json')
+    let json = this.response.headers['content-type'] && deps.contentType.parse(this.response).type.startsWith('application/json')
     if (json) this.body = JSON.parse(this.body)
   }
 
