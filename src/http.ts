@@ -285,7 +285,7 @@ export class HTTP {
     if (!this._redirectRetries) this._redirectRetries = 0
     this._redirectRetries++
     if (this._redirectRetries > 10) throw new Error(`Redirect loop at ${this.url}`)
-    if (!this.headers.location) throw new Error('Redirect with no location header')
+    if (!this.headers.location) throw new Error(`Redirect from ${this.url} has no location header`)
     const location = this.headers.location
     if (Array.isArray(location)) {
       this.url = location[0]
