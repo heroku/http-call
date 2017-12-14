@@ -3,7 +3,7 @@
   "description": "make http requests",
   "version": "4.0.0",
   "author": "Jeff Dickey @jdxcode",
-  "bugs": "https://github.com/jdxcode/http-call/issues",
+  "bugs": "https://github.com/heroku/http-call/issues",
   "dependencies": {
     "core-js": "^2.5.1",
     "debug": "^3.0.1",
@@ -29,7 +29,7 @@
   "files": [
     "lib"
   ],
-  "homepage": "https://github.com/jdxcode/http-call",
+  "homepage": "https://github.com/heroku/http-call",
   "jest": {
     "coverageReporters": [
       "json"
@@ -50,7 +50,7 @@
   ],
   "license": "ISC",
   "main": "lib/http.js",
-  "repository": "jdxcode/http-call",
+  "repository": "heroku/http-call",
   "scripts": {
     "coverage": "cat coverage/coverage-final.json | remap-istanbul -o coverage/coverage-final.json && curl -s https://codecov.io/bash | bash",
     "precommit": "lint-staged",
