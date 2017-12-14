@@ -387,7 +387,7 @@ export class HTTP {
 
   get _responseRedirect (): boolean {
     if (!this.response) return false
-    return this.statusCode >= 300 && this.statusCode < 400
+    return [301, 302, 303, 307, 308].includes(this.statusCode)
   }
 
   get _shouldParseResponseBody (): boolean {
