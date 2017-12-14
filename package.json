@@ -7,24 +7,24 @@
   "dependencies": {
     "@types/content-type": "1.1.2",
     "content-type": "1.0.4",
-    "core-js": "^2.5.1",
-    "debug": "^3.0.1",
+    "core-js": "^2.5.3",
+    "debug": "^3.1.0",
     "is-retry-allowed": "^1.1.0",
     "is-stream": "^1.1.0",
     "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
     "@types/is-stream": "^1.1.0",
-    "@types/jest": "^20.0.8",
-    "@types/nock": "^8.2.1",
-    "@types/node": "^8.0.28",
-    "jest": "^21.0.1",
-    "nock": "^9.0.14",
+    "@types/jest": "^21.1.8",
+    "@types/nock": "^9.1.0",
+    "@types/node": "^8.5.1",
+    "jest": "^21.2.1",
+    "nock": "^9.1.4",
     "remap-istanbul": "^0.9.5",
-    "rimraf": "^2.6.1",
+    "rimraf": "^2.6.2",
     "standard": "^10.0.3",
-    "ts-jest": "^21.0.0",
-    "typescript": "^2.5.2"
+    "ts-jest": "^21.2.4",
+    "typescript": "^2.6.2"
   },
   "files": [
     "lib"
