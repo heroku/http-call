@@ -5,7 +5,6 @@
   "author": "Jeff Dickey @jdxcode",
   "bugs": "https://github.com/heroku/http-call/issues",
   "dependencies": {
-    "@types/content-type": "1.1.2",
     "content-type": "1.0.4",
     "debug": "^3.1.0",
     "is-retry-allowed": "^1.1.0",
@@ -13,6 +12,7 @@
     "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
+    "@types/content-type": "1.1.2",
     "@types/is-stream": "^1.1.0",
     "@types/jest": "^21.1.8",
     "@types/nock": "^9.1.0",
