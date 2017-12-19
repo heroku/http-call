@@ -1,4 +1,3 @@
-import 'core-js/library'
 import {HTTP} from './http'
 import * as nock from 'nock'
 import * as querystring from 'querystring'
