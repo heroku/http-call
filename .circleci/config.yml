@@ -12,7 +12,7 @@ jobs:
             - v0-yarn-{{ .Branch }}-
             - v0-yarn-master-
       - checkout
-      - run: yarn --ignore-engines
+      - run: yarn
       - run: yarn test --coverage
       - run: curl -s https://codecov.io/bash | bash
       - save_cache:
