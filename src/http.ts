@@ -79,8 +79,8 @@ function caseInsensitiveObject (): {[k: string]: any} {
 
 function lowercaseHeaders (headers: http.OutgoingHttpHeaders | Object): http.OutgoingHttpHeaders {
   let newHeaders = caseInsensitiveObject()
-  for (let [k, v] of Object.entries(headers)) {
-    newHeaders[k] = v
+  for (let k of Object.keys(headers)) {
+    newHeaders[k] = (headers as any)[k]
   }
   return newHeaders
 }

@@ -5,10 +5,11 @@
   "author": "Jeff Dickey @jdxcode",
   "bugs": "https://github.com/heroku/http-call/issues",
   "dependencies": {
-    "content-type": "1.0.4",
+    "content-type": "^1.0.4",
     "debug": "^3.1.0",
     "is-retry-allowed": "^1.1.0",
     "is-stream": "^1.1.0",
+    "tslib": "^1.8.1",
     "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
@@ -17,13 +18,15 @@
     "@types/jest": "^21.1.9",
     "@types/nock": "^9.1.0",
     "@types/node": "^8.5.2",
+    "del-cli": "^1.1.0",
     "jest": "^22.0.4",
     "nock": "^9.1.5",
-    "remap-istanbul": "^0.9.5",
-    "rimraf": "^2.6.2",
     "standard": "^10.0.3",
     "ts-jest": "^22.0.0",
     "typescript": "^2.6.2"
+  },
+  "engines": {
+    "node": ">=6.0.0"
   },
   "files": [
     "lib"
@@ -51,9 +54,8 @@
   "main": "lib/http.js",
   "repository": "heroku/http-call",
   "scripts": {
-    "coverage": "cat coverage/coverage-final.json | remap-istanbul -o coverage/coverage-final.json && curl -s https://codecov.io/bash | bash",
     "precommit": "lint-staged",
-    "prepare": "rimraf lib && tsc && rimraf 'lib/**/*.test.js' 'lib/**/*.test.d.ts'",
+    "prepare": "del-cli lib && tsc && del-cli 'lib/**/*.test.js' 'lib/**/*.test.d.ts'",
     "pretest": "tsc --sourcemap",
     "test": "jest"
   },
