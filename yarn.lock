@@ -2097,9 +2097,9 @@ is-resolvable@^1.0.0:
   dependencies:
     tryit "^1.0.1"
 
-is-retry-allowed@^1.0.0, is-retry-allowed@^1.1.0:
+is-retry-allowed@^1.0.0, is-retry-allowed@^1.1.0, "is-retry-allowed@git+https://github.com/heroku/is-retry-allowed":
   version "1.1.0"
-  resolved "https://registry.yarnpkg.com/is-retry-allowed/-/is-retry-allowed-1.1.0.tgz#11a060568b67339444033d0125a61a20d564fb34"
+  resolved "git+https://github.com/heroku/is-retry-allowed#284f31a302956898b3caf78cff76b76d2a007f6d"
 
 is-stream@^1.0.0, is-stream@^1.1.0:
   version "1.1.0"
