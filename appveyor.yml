@@ -1,14 +1,13 @@
+build: off
 environment:
-  nodejs_version: "7"
+  nodejs_version: "9"
 cache:
- - "%LOCALAPPDATA%\\Yarn"
+  - '%LOCALAPPDATA%\Yarn -> appveyor.yml'
+  - node_modules -> package.json
 
 install:
   - ps: Install-Product node $env:nodejs_version x64
-  - yarn
 test_script:
-  - ./node_modules/.bin/jest
-  - ./node_modules/.bin/flow check
-  - ./node_modules/.bin/standard
+  - yarn test --coverage
 
 build: off
