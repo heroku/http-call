@@ -13,16 +13,20 @@
     "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
+    "@heroku-cli/tslint": "^1.1.2",
     "@types/content-type": "1.1.2",
     "@types/is-stream": "^1.1.0",
-    "@types/jest": "^21.1.9",
-    "@types/nock": "^9.1.0",
-    "@types/node": "^8.5.2",
+    "@types/jest": "^22.0.1",
+    "@types/nock": "^9.1.1",
+    "@types/node": "^8.5.7",
     "del-cli": "^1.1.0",
+    "husky": "^0.14.3",
     "jest": "^22.0.4",
     "nock": "^9.1.5",
+    "prettier": "^1.9.2",
     "standard": "^10.0.3",
-    "ts-jest": "^22.0.0",
+    "ts-jest": "^22.0.1",
+    "tslint": "^5.8.0",
     "typescript": "^2.6.2"
   },
   "engines": {
@@ -32,19 +36,6 @@
     "lib"
   ],
   "homepage": "https://github.com/heroku/http-call",
-  "jest": {
-    "coverageReporters": [
-      "json"
-    ],
-    "transform": {
-      "^.+\\.ts$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
-    },
-    "testRegex": "\\.test\\.ts$",
-    "moduleFileExtensions": [
-      "js",
-      "ts"
-    ]
-  },
   "keywords": [
     "http",
     "request",
@@ -54,9 +45,10 @@
   "main": "lib/http.js",
   "repository": "heroku/http-call",
   "scripts": {
-    "precommit": "lint-staged",
-    "prepare": "del-cli lib && tsc && del-cli 'lib/**/*.test.js' 'lib/**/*.test.d.ts'",
-    "pretest": "tsc --sourcemap",
+    "posttest": "cli-engine-util",
+    "precommit": "cli-engine-util",
+    "prepare": "cli-engine-util",
+    "pretest": "tsc",
     "test": "jest"
   },
   "types": "./lib/http.d.ts"

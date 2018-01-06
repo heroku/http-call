@@ -1,27 +1,31 @@
-import * as uri from 'url'
 import * as fs from 'fs'
 import * as path from 'path'
+import * as uri from 'url'
 
-type ProxyOptions = {
+interface ProxyOptions {
   proxy: {
-    host?: string,
-    port?: string,
-    proxyAuth?: string,
-  },
+    host?: string
+    port?: string
+    proxyAuth?: string
+  }
   ca?: Array<Buffer>
 }
 
 export default class ProxyUtil {
   static env = process.env
-  static get httpProxy () { return this.env.HTTP_PROXY || this.env.http_proxy }
-  static get httpsProxy () { return this.env.HTTPS_PROXY || this.env.https_proxy }
+  static get httpProxy() {
+    return this.env.HTTP_PROXY || this.env.http_proxy
+  }
+  static get httpsProxy() {
+    return this.env.HTTPS_PROXY || this.env.https_proxy
+  }
 
-  static get usingProxy () : boolean {
+  static get usingProxy(): boolean {
     if (this.httpProxy || this.httpsProxy) return true
     return false
   }
 
-  static get sslCertDir () : Array<string> {
+  static get sslCertDir(): Array<string> {
     const certDir = this.env.SSL_CERT_DIR
     if (certDir) {
       return fs.readdirSync(certDir).map(f => path.join(certDir, f))
@@ -30,20 +34,18 @@ export default class ProxyUtil {
     }
   }
 
-  static get sslCertFile () : Array<string> {
-    return this.env.SSL_CERT_FILE ? [this.env.SSL_CERT_FILE] as [string] : []
+  static get sslCertFile(): Array<string> {
+    return this.env.SSL_CERT_FILE ? ([this.env.SSL_CERT_FILE] as [string]) : []
   }
 
-  static get certs () : Array<Buffer> {
+  static get certs(): Array<Buffer> {
     let filenames = this.sslCertFile.concat(this.sslCertDir)
-    return filenames.map(function (filename: string) : Buffer {
-      return fs.readFileSync(filename)
-    })
+    return filenames.map((filename): Buffer => fs.readFileSync(filename))
   }
 
-  static agent (https: boolean) : any {
+  static agent(https: boolean): any {
     if (!this.usingProxy) return
-    const u = https ? (this.httpsProxy || this.httpProxy) : this.httpProxy
+    const u = https ? this.httpsProxy || this.httpProxy : this.httpProxy
     if (u) {
       let proxyParsed = uri.parse(u)
       let tunnel = require('tunnel-agent')
@@ -51,8 +53,8 @@ export default class ProxyUtil {
       let opts: ProxyOptions = {
         proxy: {
           host: proxyParsed.hostname,
-          port: proxyParsed.port || '8080'
-        }
+          port: proxyParsed.port || '8080',
+        },
       }
 
       if (proxyParsed.auth) {

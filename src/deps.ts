@@ -1,7 +1,8 @@
-import proxy = require('./proxy')
 import contentType = require('content-type')
 import http = require('http')
 import https = require('https')
+
+import proxy = require('./proxy')
 
 export const deps = {
   get proxy(): typeof proxy.default {

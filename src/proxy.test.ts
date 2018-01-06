@@ -20,14 +20,14 @@ describe('with proxies', () => {
         proxy: {
           host: 'foo.com',
           port: '8080',
-          proxyAuth: 'user:pass'
-        }
+          proxyAuth: 'user:pass',
+        },
       },
       proxyOptions: {
         host: 'foo.com',
         port: '8080',
-        proxyAuth: 'user:pass'
-      }
+        proxyAuth: 'user:pass',
+      },
     })
   })
 
@@ -38,14 +38,14 @@ describe('with proxies', () => {
         proxy: {
           host: 'bar.com',
           port: '8080',
-          proxyAuth: 'user:pass'
-        }
+          proxyAuth: 'user:pass',
+        },
       },
       proxyOptions: {
         host: 'bar.com',
         port: '8080',
-        proxyAuth: 'user:pass'
-      }
+        proxyAuth: 'user:pass',
+      },
     })
   })
 })
@@ -62,14 +62,14 @@ describe('with http proxy only', () => {
         proxy: {
           host: 'foo.com',
           port: '8080',
-          proxyAuth: 'user:pass'
-        }
+          proxyAuth: 'user:pass',
+        },
       },
       proxyOptions: {
         host: 'foo.com',
         port: '8080',
-        proxyAuth: 'user:pass'
-      }
+        proxyAuth: 'user:pass',
+      },
     })
   })
 })
