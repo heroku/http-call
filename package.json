@@ -13,6 +13,7 @@
     "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
+    "@cli-engine/util": "^1.0.13",
     "@heroku-cli/tslint": "^1.1.2",
     "@types/content-type": "1.1.2",
     "@types/is-stream": "^1.1.0",
