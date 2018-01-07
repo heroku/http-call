@@ -9,5 +9,3 @@ install:
   - ps: Install-Product node $env:nodejs_version x64
 test_script:
   - yarn test --coverage
-
-build: off
