@@ -44,6 +44,13 @@ describe('HTTP.get()', () => {
     expect(headers).toMatchObject({ myheader: 'ok' })
   })
 
+  test('can build a new HTTP with defaults', async () => {
+    const MyHTTP = HTTP.create({ host: 'api.jdxcode.com' })
+    api.get('/').reply(200, { message: 'ok' })
+    let { body } = await MyHTTP.get('/')
+    expect(body).toEqual({ message: 'ok' })
+  })
+
   test('makes a request to a port', async () => {
     api = nock('https://api.jdxcode.com:3000')
     api.get('/').reply(200, { message: 'ok' })

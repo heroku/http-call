@@ -100,6 +100,16 @@ export class HTTP {
     headers: {},
   }
 
+  static create(options: HTTPRequestOptions = {}): typeof HTTP {
+    const defaults = this.defaults
+    return class CustomHTTP extends HTTP {
+      static defaults = {
+        ...defaults,
+        ...options,
+      }
+    }
+  }
+
   /**
    * make an http GET request
    * @param {string} url - url or path to call
