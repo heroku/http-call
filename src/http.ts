@@ -90,6 +90,16 @@ function lowercaseHeaders(headers: http.OutgoingHttpHeaders | object): http.Outg
  * @class
  */
 export class HTTP {
+  static defaults: HTTPRequestOptions = {
+    method: 'GET',
+    host: 'localhost',
+    protocol: 'https:',
+    path: '/',
+    raw: false,
+    partial: false,
+    headers: {},
+  }
+
   /**
    * make an http GET request
    * @param {string} url - url or path to call
@@ -187,31 +197,6 @@ export class HTTP {
     return http
   }
 
-  static defaults(options: HTTPRequestOptions = {}): typeof HTTP {
-    return class CustomHTTP extends HTTP {
-      static get defaultOptions() {
-        return {
-          ...super.defaultOptions,
-          ...options,
-        }
-      }
-    }
-  }
-
-  static get defaultOptions(): HTTPRequestOptions {
-    return {
-      method: 'GET',
-      host: 'localhost',
-      protocol: 'https:',
-      path: '/',
-      raw: false,
-      partial: false,
-      headers: {
-        'user-agent': `${pjson.name}/${pjson.version} node-${process.version}`,
-      },
-    }
-  }
-
   // instance properties
 
   response: http.IncomingMessage
@@ -238,10 +223,10 @@ export class HTTP {
   set url(input: string) {
     let u = uri.parse(input)
     this.options.protocol = u.protocol || this.options.protocol
-    this.options.host = u.hostname || this.ctor.defaultOptions.host || 'localhost'
+    this.options.host = u.hostname || this.ctor.defaults.host || 'localhost'
     this.options.path = u.path || '/'
     this.options.agent = this.options.agent || deps.proxy.agent(this.secure)
-    this.options.port = u.port || this.ctor.defaultOptions.port || (this.secure ? 443 : 80)
+    this.options.port = u.port || (this.secure ? 443 : 80)
   }
   get headers(): http.IncomingMessage['headers'] {
     if (!this.response) return {}
@@ -256,11 +241,15 @@ export class HTTP {
   }
 
   constructor(url: string, options: HTTPRequestOptions = {}) {
+    const userAgent =
+      (global['http-call'] && global['http-call']!.userAgent && global['http-call']!.userAgent) ||
+      `${pjson.name}/${pjson.version} node-${process.version}`
     this.options = {
-      ...this.ctor.defaultOptions,
+      ...this.ctor.defaults,
       ...options,
       headers: lowercaseHeaders({
-        ...this.ctor.defaultOptions.headers,
+        'user-agent': userAgent,
+        ...this.ctor.defaults.headers,
         ...options.headers,
       }),
     }

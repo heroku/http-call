@@ -58,11 +58,26 @@ describe('HTTP.get()', () => {
     expect(body).toEqual({ message: 'ok' })
   })
 
-  test('can build a new default class', async () => {
-    const MyHTTP = HTTP.defaults({ host: 'api.jdxcode.com' })
-    api.get('/').reply(200, { message: 'ok' })
-    let { body } = await MyHTTP.get('/')
+  test('can set default user agent', async () => {
+    HTTP.defaults.headers = { 'user-agent': 'mynewuseragent' }
+    api
+      .matchHeader('user-agent', `mynewuseragent`)
+      .get('/')
+      .reply(200, { message: 'ok' })
+    let { body } = await HTTP.get('https://api.jdxcode.com/')
     expect(body).toEqual({ message: 'ok' })
+    delete HTTP.defaults.headers['user-agent']
+  })
+
+  test('can set user agent as a global', async () => {
+    global['http-call'] = { userAgent: 'mynewuseragent' }
+    api
+      .matchHeader('user-agent', `mynewuseragent`)
+      .get('/')
+      .reply(200, { message: 'ok' })
+    let { body } = await HTTP.get('https://api.jdxcode.com/')
+    expect(body).toEqual({ message: 'ok' })
+    delete global['http-call']
   })
 
   test('sets user-agent header', async () => {
