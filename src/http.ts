@@ -80,6 +80,7 @@ function caseInsensitiveObject(): { [k: string]: any } {
 function lowercaseHeaders(headers: http.OutgoingHttpHeaders | object): http.OutgoingHttpHeaders {
   let newHeaders = caseInsensitiveObject()
   for (let k of Object.keys(headers)) {
+    if (!(headers as any)[k] && (headers as any)[k] !== '') continue
     newHeaders[k] = (headers as any)[k]
   }
   return newHeaders

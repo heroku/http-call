@@ -104,6 +104,12 @@ describe('HTTP.get()', () => {
     await HTTP.get('https://api.jdxcode.com', { headers })
   })
 
+  test('does not fail on undefined header', async () => {
+    api.get('/').reply(200)
+    let headers = { foo: undefined } as any
+    await HTTP.get('https://api.jdxcode.com', { headers })
+  })
+
   describe('wait mocked out', () => {
     let wait = HTTP.prototype._wait
 
