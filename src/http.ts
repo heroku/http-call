@@ -405,6 +405,8 @@ export class HTTP {
   }
 }
 
+export default HTTP
+
 export class HTTPError extends Error {
   statusCode: number
   http: HTTP
