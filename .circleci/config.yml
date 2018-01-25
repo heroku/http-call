@@ -1,9 +1,9 @@
 ---
 version: 2
 jobs:
-  node-6: &test-build
+  node-8: &test-build
     docker:
-      - image: node:6
+      - image: node:8
     working_directory: /cli
     steps:
       - checkout
@@ -20,10 +20,6 @@ jobs:
           paths:
             - /cli/node_modules
             - /usr/local/share/.cache/yarn
-  node-8:
-    <<: *test-build
-    docker:
-      - image: node:8
   node-9:
     <<: *test-build
     docker:
@@ -33,6 +29,5 @@ workflows:
   version: 2
   test:
     jobs:
-      - node-6
       - node-8
       - node-9
