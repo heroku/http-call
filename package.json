@@ -9,26 +9,21 @@
     "debug": "^3.1.0",
     "is-retry-allowed": "^1.1.0",
     "is-stream": "^1.1.0",
-    "tslib": "^1.8.1",
+    "tslib": "^1.9.0",
     "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
-    "@cli-engine/util": "^1.0.13",
-    "@heroku-cli/tslint": "^1.1.2",
+    "@heroku-cli/tslint": "^1.1.4",
     "@types/content-type": "1.1.2",
     "@types/is-stream": "^1.1.0",
-    "@types/jest": "^22.0.1",
-    "@types/nock": "^9.1.1",
-    "@types/node": "^9.3.0",
-    "del-cli": "^1.1.0",
-    "husky": "^0.14.3",
-    "jest": "^22.0.4",
-    "nock": "^9.1.5",
-    "prettier": "^1.9.2",
-    "standard": "^10.0.3",
-    "ts-jest": "^22.0.1",
-    "tslint": "^5.8.0",
-    "typescript": "^2.6.2"
+    "@types/jest": "^22.2.2",
+    "@types/nock": "^9.1.2",
+    "@types/node": "^9.6.0",
+    "jest": "^22.4.3",
+    "nock": "^9.2.3",
+    "ts-jest": "^22.4.2",
+    "tslint": "^5.9.1",
+    "typescript": "^2.7.2"
   },
   "engines": {
     "node": ">=8.0.0"
@@ -46,9 +41,7 @@
   "main": "lib/http.js",
   "repository": "heroku/http-call",
   "scripts": {
-    "posttest": "cli-engine-util",
-    "precommit": "cli-engine-util",
-    "prepare": "cli-engine-util",
+    "prepare": "rm -rf lib && tsc",
     "pretest": "tsc",
     "test": "jest"
   },

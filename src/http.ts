@@ -210,13 +210,13 @@ export class HTTP {
 
   // instance properties
 
-  response: http.IncomingMessage
-  request: http.ClientRequest
+  response!: http.IncomingMessage
+  request!: http.ClientRequest
   body: any
   options: FullHTTPRequestOptions
 
-  private _redirectRetries: number
-  private _errorRetries: number
+  private _redirectRetries = 0
+  private _errorRetries = 0
 
   get method(): string {
     return this.options.method || 'GET'
@@ -287,7 +287,6 @@ export class HTTP {
   }
 
   async _redirect() {
-    if (!this._redirectRetries) this._redirectRetries = 0
     this._redirectRetries++
     if (this._redirectRetries > 10) throw new Error(`Redirect loop at ${this.url}`)
     if (!this.headers.location) throw new Error(`Redirect from ${this.url} has no location header`)
@@ -301,7 +300,6 @@ export class HTTP {
   }
 
   async _maybeRetry(err: Error) {
-    if (!this._errorRetries) this._errorRetries = 0
     this._errorRetries++
     const allowed = (err: IErrorWithCode): boolean => {
       if (this._errorRetries > 5) return false
@@ -338,6 +336,12 @@ export class HTTP {
         this.request = deps.https.request(this.options, resolve)
       } else {
         this.request = deps.http.request(this.options, resolve)
+      }
+      if (this.options.timeout) {
+        this.request.setTimeout(this.options.timeout, () => {
+          debug(`<-- ${this.method} ${this.url} TIMED OUT`)
+          this.request.abort()
+        })
       }
       this.request.on('error', reject)
       if (this.options.body && deps.isStream.readable(this.options.body)) {

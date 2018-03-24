@@ -1,5 +1,4 @@
 module.exports = {
-  mapCoverage: true,
   moduleFileExtensions: ['ts', 'js'],
   testMatch: ['**/*.test.ts'],
   transform: {
