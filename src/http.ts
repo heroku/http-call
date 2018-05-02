@@ -386,7 +386,7 @@ export class HTTP {
 
   _redactedHeaders(headers: http.IncomingHttpHeaders | http.OutgoingHttpHeaders) {
     headers = { ...headers }
-    if (headers.authorization) headers.authorization = '[REDACTED]'
+    if (process.env.HTTP_CALL_REDACT !== '0' && headers.authorization) headers.authorization = '[REDACTED]'
     return headers
   }
 
