@@ -20,7 +20,7 @@ jobs:
           paths:
             - /cli/node_modules
             - /usr/local/share/.cache/yarn
-  node-9:
+  node-latest:
     <<: *test-build
     docker:
       - image: node:latest
@@ -30,4 +30,4 @@ workflows:
   test:
     jobs:
       - node-8
-      - node-9
+      - node-latest
