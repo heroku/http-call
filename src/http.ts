@@ -344,6 +344,7 @@ export class HTTP {
         })
       }
       this.request.on('error', reject)
+      this.request.on('timeout', reject)
       if (this.options.body && deps.isStream.readable(this.options.body)) {
         this.options.body.pipe(this.request)
       } else {
