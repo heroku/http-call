@@ -58,6 +58,13 @@ describe('HTTP.get()', () => {
     expect(body).toEqual({ message: 'ok' })
   })
 
+  test('allows specifying the port', async () => {
+    api = nock('https://api.jdxcode.com:3000')
+    api.get('/').reply(200, { message: 'ok' })
+    let { body } = await HTTP.get('https://api.jdxcode.com', {port: 3000})
+    expect(body).toEqual({ message: 'ok' })
+  })
+
   test('makes a http GET request', async () => {
     api = nock('http://api.jdxcode.com')
     api.get('/').reply(200, { message: 'ok' })

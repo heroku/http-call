@@ -17,11 +17,11 @@
     "@types/is-stream": "^1.1.0",
     "@types/jest": "^22.2.3",
     "@types/nock": "^9.1.3",
-    "@types/node": "^9.6.6",
+    "@types/node": "^10.1.1",
     "jest": "^22.4.3",
-    "nock": "^9.2.5",
-    "ts-jest": "^22.4.4",
-    "tslint": "^5.9.1",
+    "nock": "^9.2.6",
+    "ts-jest": "^22.4.6",
+    "tslint": "^5.10.0",
     "typescript": "^2.8.3"
   },
   "engines": {

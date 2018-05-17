@@ -237,7 +237,7 @@ export class HTTP {
     this.options.host = u.hostname || this.ctor.defaults.host || 'localhost'
     this.options.path = u.path || '/'
     this.options.agent = this.options.agent || deps.proxy.agent(this.secure)
-    this.options.port = u.port || (this.secure ? 443 : 80)
+    this.options.port = u.port || this.options.port || (this.secure ? 443 : 80)
   }
   get headers(): http.IncomingMessage['headers'] {
     if (!this.response) return {}
