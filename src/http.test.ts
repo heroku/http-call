@@ -277,7 +277,7 @@ describe('HTTP.post()', () => {
 })
 describe('HTTP.parseBody()', () => {
   let body: any
-  let http: HTTP
+  let http: HTTP<any>
   beforeEach(() => {
     body = {
       karate: 'chop',
@@ -327,7 +327,7 @@ describe('HTTP.parseBody()', () => {
         .reply(206, [7, 8, 9])
     })
     test('gets next body when next-range is set', async () => {
-      let { body } = await HTTP.get('https://api.jdxcode.com')
+      let { body } = await HTTP.get<number[]>('https://api.jdxcode.com')
       expect(body).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
     })
   })

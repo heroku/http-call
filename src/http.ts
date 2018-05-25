@@ -90,7 +90,7 @@ function lowercaseHeaders(headers: http.OutgoingHttpHeaders | object): http.Outg
  * Utility for simple HTTP calls
  * @class
  */
-export class HTTP {
+export class HTTP<T> {
   static defaults: HTTPRequestOptions = {
     method: 'GET',
     host: 'localhost',
@@ -103,7 +103,7 @@ export class HTTP {
 
   static create(options: HTTPRequestOptions = {}): typeof HTTP {
     const defaults = this.defaults
-    return class CustomHTTP extends HTTP {
+    return class CustomHTTP extends HTTP<any> {
       static defaults = {
         ...defaults,
         ...options,
@@ -122,8 +122,8 @@ export class HTTP {
    * await http.get('https://google.com')
    * ```
    */
-  static get(url: string, options: HTTPRequestOptions = {}) {
-    return this.request(url, { ...options, method: 'GET' })
+  static get<T>(url: string, options: HTTPRequestOptions = {}) {
+    return this.request<T>(url, { ...options, method: 'GET' })
   }
 
   /**
@@ -137,8 +137,8 @@ export class HTTP {
    * await http.post('https://google.com')
    * ```
    */
-  static post(url: string, options: HTTPRequestOptions = {}) {
-    return this.request(url, { ...options, method: 'POST' })
+  static post<T>(url: string, options: HTTPRequestOptions = {}) {
+    return this.request<T>(url, { ...options, method: 'POST' })
   }
 
   /**
@@ -152,8 +152,8 @@ export class HTTP {
    * await http.put('https://google.com')
    * ```
    */
-  static put(url: string, options: HTTPRequestOptions = {}) {
-    return this.request(url, { ...options, method: 'PUT' })
+  static put<T>(url: string, options: HTTPRequestOptions = {}) {
+    return this.request<T>(url, { ...options, method: 'PUT' })
   }
 
   /**
@@ -167,8 +167,8 @@ export class HTTP {
    * await http.patch('https://google.com')
    * ```
    */
-  static async patch(url: string, options: HTTPRequestOptions = {}) {
-    return this.request(url, { ...options, method: 'PATCH' })
+  static async patch<T>(url: string, options: HTTPRequestOptions = {}) {
+    return this.request<T>(url, { ...options, method: 'PATCH' })
   }
 
   /**
@@ -182,8 +182,8 @@ export class HTTP {
    * await http.delete('https://google.com')
    * ```
    */
-  static async delete(url: string, options: HTTPRequestOptions = {}) {
-    return this.request(url, { ...options, method: 'DELETE' })
+  static async delete<T>(url: string, options: HTTPRequestOptions = {}) {
+    return this.request<T>(url, { ...options, method: 'DELETE' })
   }
 
   /**
@@ -202,8 +202,8 @@ export class HTTP {
     return this.request(url, { ...options, raw: true })
   }
 
-  static async request(url: string, options: HTTPRequestOptions = {}): Promise<HTTP> {
-    let http = new this(url, options)
+  static async request<T>(url: string, options: HTTPRequestOptions = {}): Promise<HTTP<T>> {
+    let http = new this<T>(url, options)
     await http._request()
     return http
   }
@@ -212,7 +212,7 @@ export class HTTP {
 
   response!: http.IncomingMessage
   request!: http.ClientRequest
-  body: any
+  body!: T
   options: FullHTTPRequestOptions
 
   private _redirectRetries = 0
@@ -354,10 +354,10 @@ export class HTTP {
   }
 
   async _parse() {
-    this.body = await concat(this.response)
+    this.body = await concat(this.response) as T
     let json =
       this.response.headers['content-type'] && deps.contentType.parse(this.response).type.startsWith('application/json')
-    if (json) this.body = JSON.parse(this.body)
+    if (json) this.body = JSON.parse(this.body as any as string)
   }
 
   _parseBody(body: object) {
@@ -382,7 +382,7 @@ export class HTTP {
     this.options.headers.range = Array.isArray(next) ? next[0] : next
     let prev = this.body
     await this._request()
-    this.body = prev.concat(this.body)
+    this.body = (prev as any).concat(this.body)
   }
 
   _redactedHeaders(headers: http.IncomingHttpHeaders | http.OutgoingHttpHeaders) {
@@ -414,11 +414,11 @@ export default HTTP
 
 export class HTTPError extends Error {
   statusCode: number
-  http: HTTP
+  http: HTTP<any>
   body: any
   __httpcall = pjson.version
 
-  constructor(http: HTTP) {
+  constructor(http: HTTP<any>) {
     super()
     if (typeof http.body === 'string' || typeof http.body.message === 'string')
       this.message = http.body.message || http.body
