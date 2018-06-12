@@ -56,16 +56,16 @@ interface HTTPRequest {
 function caseInsensitiveObject(): { [k: string]: any } {
   let lowercaseKey = (k: any) => (typeof k === 'string' ? k.toLowerCase() : k)
   return new Proxy({} as { [k: string]: any }, {
-    get: (t, k) => {
+    get: (t, k: string) => {
       k = lowercaseKey(k)
       return t[k]
     },
-    set: (t, k, v) => {
+    set: (t, k: string, v) => {
       k = lowercaseKey(k)
       t[k] = v
       return true
     },
-    deleteProperty: (t, k) => {
+    deleteProperty: (t, k: string) => {
       k = lowercaseKey(k)
       if (k in t) return false
       return delete t[k]
