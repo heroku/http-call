@@ -7,7 +7,6 @@ import { deps } from './deps'
 const pjson = require('../package.json')
 const debug = require('debug')('http')
 const debugHeaders = require('debug')('http:headers')
-const debugBody = require('debug')('http:body')
 
 interface IErrorWithCode extends Error {
   code?: string
@@ -317,20 +316,53 @@ export class HTTP<T> {
     throw err
   }
 
-  _debugRequest() {
-    if (this.options.agent) debug('proxy: %o', this.options.agent)
-    debug('--> %s %s', this.options.method, this.url)
-    debugHeaders(this._redactedHeaders(this.options.headers))
-    if (this.options.body) debugBody(this.options.body)
+  private get _chalk(): any {
+    try {
+      return require('chalk')
+    } catch (err) { return }
   }
 
-  _debugResponse() {
-    debug('<-- %s %s %s', this.method, this.url, this.statusCode)
-    debugHeaders(this._redactedHeaders(this.headers))
-    if (this.body) debugBody(this.body)
+  private _renderStatus(code: number) {
+    if (code < 200) return code
+    if (code < 300) return this._chalk.green(code)
+    if (code < 400) return this._chalk.bold.cyan(code)
+    if (code < 500) return this._chalk.bgYellow(code)
+    if (code < 600) return this._chalk.bgRed(code)
+    return code
   }
 
-  _performRequest(): Promise<http.IncomingMessage> {
+  private _debugRequest() {
+    if (!debug.enabled) return
+    let output = [`${this._chalk.bold('→')} ${this._chalk.blue.bold(this.options.method)} ${this._chalk.bold(this.url)}`]
+    if (this.options.agent) output.push(`  proxy: ${util.inspect(this.options.agent)}`)
+    if (debugHeaders.enabled) output.push(this._renderHeaders(this.options.headers))
+    if (this.options.body) output.push('  ' + this.options.body)
+    debug(output.join('\n'))
+  }
+
+  private _debugResponse() {
+    if (!debug.enabled) return
+    const chalk = require('chalk')
+    let output = [`${this._chalk.white.bold('←')} ${this._chalk.blue.bold(this.method)} ${this._chalk.bold(this.url)} ${this._renderStatus(this.statusCode)}`]
+    if (debugHeaders.enabled) output.push(this._renderHeaders(this.headers))
+    if (this.body) output.push('  ' + util.inspect(this.body))
+    debug(output.join('\n'))
+  }
+
+  private _renderHeaders(headers: http.IncomingHttpHeaders | http.OutgoingHttpHeaders): string {
+    headers = { ...headers }
+    if (process.env.HTTP_CALL_REDACT !== '0' && headers.authorization) headers.authorization = '[REDACTED]'
+    return Object.entries(headers)
+    .sort(([a], [b]) => {
+      if (a < b) return -1
+      if (a > b) return 1
+      return 0
+    })
+    .map(([k, v]) => `  ${this._chalk.dim(k + ':')} ${this._chalk.cyan(util.inspect(v))}`)
+    .join('\n')
+  }
+
+  private _performRequest(): Promise<http.IncomingMessage> {
     return new Promise((resolve, reject) => {
       if (this.secure) {
         this.request = deps.https.request(this.options, resolve)
@@ -339,7 +371,7 @@ export class HTTP<T> {
       }
       if (this.options.timeout) {
         this.request.setTimeout(this.options.timeout, () => {
-          debug(`<-- ${this.method} ${this.url} TIMED OUT`)
+          debug(`← ${this.method} ${this.url} TIMED OUT`)
           this.request.abort()
         })
       }
@@ -353,14 +385,14 @@ export class HTTP<T> {
     })
   }
 
-  async _parse() {
+  private async _parse() {
     this.body = await concat(this.response) as T
     let type = this.response.headers['content-type'] ? deps.contentType.parse(this.response).type : ''
     let json = type.startsWith('application/json') || type.startsWith('application/vnd.api+json')
     if (json) this.body = JSON.parse(this.body as any as string)
   }
 
-  _parseBody(body: object) {
+  private _parseBody(body: object) {
     if (deps.isStream.readable(body)) {
       this.options.body = body
       return
@@ -377,7 +409,7 @@ export class HTTP<T> {
     this.options.headers['content-length'] = Buffer.byteLength(this.options.body).toString()
   }
 
-  async _getNextRange() {
+  private async _getNextRange() {
     const next = this.headers['next-range']
     this.options.headers.range = Array.isArray(next) ? next[0] : next
     let prev = this.body
@@ -385,27 +417,21 @@ export class HTTP<T> {
     this.body = (prev as any).concat(this.body)
   }
 
-  _redactedHeaders(headers: http.IncomingHttpHeaders | http.OutgoingHttpHeaders) {
-    headers = { ...headers }
-    if (process.env.HTTP_CALL_REDACT !== '0' && headers.authorization) headers.authorization = '[REDACTED]'
-    return headers
-  }
-
-  get _responseOK(): boolean {
+  private get _responseOK(): boolean {
     if (!this.response) return false
     return this.statusCode >= 200 && this.statusCode < 300
   }
 
-  get _responseRedirect(): boolean {
+  private get _responseRedirect(): boolean {
     if (!this.response) return false
     return [301, 302, 303, 307, 308].includes(this.statusCode)
   }
 
-  get _shouldParseResponseBody(): boolean {
+  private get _shouldParseResponseBody(): boolean {
     return !this._responseOK || (!this.options.raw && this._responseOK)
   }
 
-  _wait(ms: number) {
+  private _wait(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 }

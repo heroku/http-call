@@ -118,14 +118,14 @@ describe('HTTP.get()', () => {
   })
 
   describe('wait mocked out', () => {
-    let wait = HTTP.prototype._wait
+    let wait = (HTTP.prototype as any)._wait
 
     beforeAll(() => {
-      HTTP.prototype._wait = jest.fn()
+      (HTTP.prototype as any)._wait = jest.fn()
     })
 
     afterAll(() => {
-      HTTP.prototype._wait = wait
+      (HTTP.prototype as any)._wait = wait
     })
 
     test('retries then succeeds', async () => {
