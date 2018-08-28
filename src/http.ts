@@ -355,8 +355,8 @@ export class HTTP<T> {
 
   async _parse() {
     this.body = await concat(this.response) as T
-    let json =
-      this.response.headers['content-type'] && deps.contentType.parse(this.response).type.startsWith('application/json')
+    let type = this.response.headers['content-type'] ? deps.contentType.parse(this.response).type : ''
+    let json = type.startsWith('application/json') || type.startsWith('application/vnd.api+json')
     if (json) this.body = JSON.parse(this.body as any as string)
   }
 
