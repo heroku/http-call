@@ -336,7 +336,7 @@ export class HTTP<T> {
     let output = [`${this._chalk.bold('→')} ${this._chalk.blue.bold(this.options.method)} ${this._chalk.bold(this.url)}`]
     if (this.options.agent) output.push(`  proxy: ${util.inspect(this.options.agent)}`)
     if (debugHeaders.enabled) output.push(this._renderHeaders(this.options.headers))
-    if (this.options.body) output.push('  ' + this.options.body)
+    if (this.options.body) output.push(this.options.body)
     debug(output.join('\n'))
   }
 
@@ -345,7 +345,7 @@ export class HTTP<T> {
     const chalk = require('chalk')
     let output = [`${this._chalk.white.bold('←')} ${this._chalk.blue.bold(this.method)} ${this._chalk.bold(this.url)} ${this._renderStatus(this.statusCode)}`]
     if (debugHeaders.enabled) output.push(this._renderHeaders(this.headers))
-    if (this.body) output.push('  ' + util.inspect(this.body))
+    if (this.body) output.push(util.inspect(this.body))
     debug(output.join('\n'))
   }
 
