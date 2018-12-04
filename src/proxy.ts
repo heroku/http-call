@@ -28,7 +28,9 @@ export default class ProxyUtil {
   static get sslCertDir(): Array<string> {
     const certDir = this.env.SSL_CERT_DIR
     if (certDir) {
-      return fs.readdirSync(certDir).map(f => path.join(certDir, f))
+      return fs.readdirSync(certDir)
+        .map(f => path.join(certDir, f))
+        .filter(f => fs.statSync(f).isFile())
     } else {
       return []
     }
