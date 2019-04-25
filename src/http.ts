@@ -302,7 +302,7 @@ export class HTTP<T> {
     this._errorRetries++
     const allowed = (err: IErrorWithCode): boolean => {
       if (this._errorRetries > 5) return false
-      if (!err.code) return false
+      if (!err || !err.code) return false
       if (err.code === 'ENOTFOUND') return true
       return require('is-retry-allowed')(err)
     }
