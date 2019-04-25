@@ -1,6 +1,7 @@
 import contentType = require('content-type')
 import http = require('http')
 import https = require('https')
+import isStream = require('is-stream')
 
 import proxy = require('./proxy')
 
@@ -8,7 +9,7 @@ export const deps = {
   get proxy(): typeof proxy.default {
     return fetch('./proxy').default
   },
-  get isStream(): any {
+  get isStream(): typeof isStream {
     return fetch('is-stream')
   },
   get contentType(): typeof contentType {
