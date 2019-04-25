@@ -1,4 +1,5 @@
 import http = require('http')
+import JSONParse = require('parse-json')
 import * as uri from 'url'
 import * as util from 'util'
 
@@ -389,7 +390,7 @@ export class HTTP<T> {
     this.body = await concat(this.response) as T
     let type = this.response.headers['content-type'] ? deps.contentType.parse(this.response).type : ''
     let json = type.startsWith('application/json') || type.startsWith('application/vnd.api+json')
-    if (json) this.body = JSON.parse(this.body as any as string)
+    if (json) this.body = JSONParse(this.body as any as string)
   }
 
   private _parseBody(body: object) {
