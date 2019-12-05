@@ -20,7 +20,22 @@ export default class ProxyUtil {
     return this.env.HTTPS_PROXY || this.env.https_proxy
   }
 
-  static get usingProxy(): boolean {
+  static get noProxy() {
+    return this.env.NO_PROXY || this.env.no_proxy
+  }
+
+  static shouldDodgeProxy(host: string): boolean {
+    if (!this.noProxy) return false
+    if (this.noProxy === '*') return true
+
+    return this.noProxy
+        .split(',')
+        .map(p => p.trim())
+        .some(p => (p[0] === '.' && host.endsWith(p.substr(1))) || host.endsWith(p))
+  }
+
+  static usingProxy(host?: string): boolean {
+    if (host && this.shouldDodgeProxy(host)) return false
     if (this.httpProxy || this.httpsProxy) return true
     return false
   }
@@ -45,8 +60,8 @@ export default class ProxyUtil {
     return filenames.map((filename): Buffer => fs.readFileSync(filename))
   }
 
-  static agent(https: boolean): any {
-    if (!this.usingProxy) return
+  static agent(https: boolean, host?: string): any {
+    if (!this.usingProxy(host)) return
     const u = https ? this.httpsProxy || this.httpProxy : this.httpProxy
     if (u) {
       let proxyParsed = uri.parse(u)
