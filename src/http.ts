@@ -30,12 +30,16 @@ export type Protocol = 'https:' | 'http:'
  * @property {(string)} body - request body. Sets content-type to application/json and stringifies when object
  * @property {(boolean)} partial - do not make continuous requests while receiving a Next-Range header for GET requests
  * @property {(number)} port - port to use
+ * @property {number} maxRetries - max number of retries in case of a retryable error
+ * @property {function} isRetryable - defines a custom retry behavior when an HTTP error occurs
  */
 export type FullHTTPRequestOptions = http.ClientRequestArgs & {
   raw?: boolean
   body?: any
   partial?: boolean
   headers: http.OutgoingHttpHeaders
+  maxRetries?: number
+  isRetryable?: (e: HTTPError) => boolean
 }
 
 export type HTTPRequestOptions = Partial<FullHTTPRequestOptions>
@@ -250,6 +254,9 @@ export class HTTP<T> {
   get ctor() {
     return this.constructor as typeof HTTP
   }
+  get maxRetries(): number {
+    return this.options.maxRetries || 5
+  }
 
   constructor(url: string, options: HTTPRequestOptions = {}) {
     const userAgent =
@@ -269,7 +276,7 @@ export class HTTP<T> {
     if (this.options.body) this._parseBody(this.options.body)
   }
 
-  async _request() {
+  async _request(): Promise<void> {
     this._debugRequest()
     try {
       this.response = await this._performRequest()
@@ -281,7 +288,7 @@ export class HTTP<T> {
     this._debugResponse()
     if (this._responseRedirect) return this._redirect()
     if (!this._responseOK) {
-      throw new HTTPError(this)
+      return this._maybeRetryHTTP(new HTTPError(this))
     }
     if (!this.partial) await this._getNextRange()
   }
@@ -299,22 +306,39 @@ export class HTTP<T> {
     await this._request()
   }
 
+  async _maybeRetryHTTP(err: HTTPError) {
+    this._errorRetries++
+    const allowed = (err: HTTPError): boolean => {
+      if (this._errorRetries > this.maxRetries) return false
+      if (!err) return false
+      return this.options.isRetryable !== undefined && this.options.isRetryable(err)
+    }
+    if (allowed(err)) {
+      return this._retryRequest()
+    }
+    throw err
+  }
+
   async _maybeRetry(err: Error) {
     this._errorRetries++
     const allowed = (err: IErrorWithCode): boolean => {
-      if (this._errorRetries > 5) return false
+      if (this._errorRetries > this.maxRetries) return false
       if (!err || !err.code) return false
       if (err.code === 'ENOTFOUND') return true
       return require('is-retry-allowed')(err)
     }
     if (allowed(err)) {
-      let noise = Math.random() * 100
-      // tslint:disable-next-line
-      await this._wait((1 << this._errorRetries) * 100 + noise)
-      await this._request()
-      return
+      return this._retryRequest()
     }
     throw err
+  }
+
+  private async _retryRequest() {
+    let noise = Math.random() * 100
+    // tslint:disable-next-line
+    await this._wait((1 << this._errorRetries) * 100 + noise)
+    await this._request()
+    return
   }
 
   private get _chalk(): any {
