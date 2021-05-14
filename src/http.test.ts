@@ -1,7 +1,7 @@
 import * as nock from 'nock'
 import * as querystring from 'querystring'
 
-import { HTTP } from './http'
+import { HTTP, HTTPError } from './http'
 
 nock.disableNetConnect()
 
@@ -275,6 +275,7 @@ describe('HTTP.post()', () => {
     expect(rsp.body).toEqual({ message: 'ok' })
   })
 })
+
 describe('HTTP.parseBody()', () => {
   let body: any
   let http: HTTP<any>
@@ -366,4 +367,45 @@ describe('HTTP.stream()', () => {
     response.on('data', data => expect(data).toEqual('{"message":"ok"}'))
     response.on('end', done)
   })
+})
+
+describe('Custom retry', () => {
+  test('not retrying 404 by default', async () => {
+    api.get('/').reply(404)
+    api.get('/').reply(200)
+    try {
+      await HTTP.get('https://api.jdxcode.com')
+      fail('request should have failed')
+    } catch (err) {
+      expect(err.statusCode).toEqual(404)
+    }
+  })
+
+  test('retrying 404', async () => {
+    api.get('/').reply(404)
+    api.get('/').reply(200)
+    const { statusCode } = await HTTP.get('https://api.jdxcode.com', {
+      isRetryable: (e: HTTPError) => {
+        return e.statusCode !== undefined && e.statusCode === 404
+      },
+    })
+    expect(statusCode).toEqual(200)
+  })
+
+  test('retrying 404, a non default retry amount', async () => {
+    api.get('/').reply(404)
+    api.get('/').reply(404)
+    api.get('/').reply(200) // will never reach this
+    try {
+      await HTTP.get('https://api.jdxcode.com', {
+        isRetryable: (e: HTTPError) => {
+          return e.statusCode !== undefined && e.statusCode === 404
+        },
+        maxRetries: 1,
+      })
+      fail('request should have failed')
+    } catch (err) {
+      expect(err.statusCode).toEqual(404)
+    }
+  }) // increasing default timeout due to retry delay
 })
