@@ -6,7 +6,7 @@
   "bugs": "https://github.com/heroku/http-call/issues",
   "dependencies": {
     "content-type": "^1.0.4",
-    "debug": "^4.1.1",
+    "debug": "^4.3.1",
     "is-retry-allowed": "^1.1.0",
     "is-stream": "^2.0.0",
     "parse-json": "^4.0.0",
