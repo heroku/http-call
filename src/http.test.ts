@@ -180,7 +180,7 @@ describe('HTTP.get()', () => {
       await HTTP.get('https://api.jdxcode.com')
     } catch (error: any) {
       expect(error.statusCode).toEqual(404)
-      expect(error.message).toEqual(`HTTP Error 404 for GET https://api.jdxcode.com:443/
+      expect(error.message).toEqual(`HTTP Error 404 for GET https://api.jdxcode.com/
 oops! not found`)
     }
   })
@@ -192,7 +192,7 @@ oops! not found`)
       await HTTP.get('https://api.jdxcode.com')
     } catch (error: any) {
       expect(error.statusCode).toEqual(404)
-      expect(error.message).toEqual(`HTTP Error 404 for GET https://api.jdxcode.com:443/
+      expect(error.message).toEqual(`HTTP Error 404 for GET https://api.jdxcode.com/
 uh oh`)
       expect(error.body).toMatchObject({otherinfo: [1, 2, 3]})
     }
@@ -205,7 +205,7 @@ uh oh`)
       await HTTP.get('https://api.jdxcode.com')
     } catch (error: any) {
       expect(error.statusCode).toEqual(404)
-      expect(error.message).toEqual(`HTTP Error 404 for GET https://api.jdxcode.com:443/
+      expect(error.message).toEqual(`HTTP Error 404 for GET https://api.jdxcode.com/
 { otherinfo: [ 1, 2, 3 ] }`)
       expect(error.body).toMatchObject({otherinfo: [1, 2, 3]})
     }
@@ -234,7 +234,7 @@ uh oh`)
     try {
       await HTTP.get('https://api.jdxcode.com/foo1')
     } catch (error: any) {
-      expect(error.message).toEqual('Redirect loop at https://api.jdxcode.com:443/foo11')
+      expect(error.message).toEqual('Redirect loop at https://api.jdxcode.com/foo11')
     }
   })
 })
