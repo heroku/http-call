@@ -1,9 +1,14 @@
 // tslint:disable
-
 declare namespace NodeJS {
   interface Global {
-    'http-call'?: {
+    httpCall?: {
       userAgent?: string
     }
+  }
+}
+
+export interface Global extends NodeJS.Global {
+  httpCall?: {
+    userAgent?: string
   }
 }

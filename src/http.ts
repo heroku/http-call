@@ -1,9 +1,10 @@
 import http = require('http')
 import JSONParse = require('parse-json')
 import * as uri from 'url'
-import * as util from 'util'
-
-import { deps } from './deps'
+import {inspect} from 'util'
+import {deps} from './deps'
+// eslint-disable-next-line node/no-missing-import
+import {Global} from './global'
 
 const pjson = require('../package.json')
 const debug = require('debug')('http')
@@ -15,7 +16,7 @@ interface IErrorWithCode extends Error {
 
 function concat(stream: NodeJS.ReadableStream) {
   return new Promise(resolve => {
-    let strings: string[] = []
+    const strings: string[] = []
     stream.on('data', data => strings.push(data))
     stream.on('end', () => resolve(strings.join('')))
   })
@@ -54,7 +55,7 @@ interface HTTPRequest {
 }
 
 function caseInsensitiveObject(): { [k: string]: any } {
-  let lowercaseKey = (k: any) => (typeof k === 'string' ? k.toLowerCase() : k)
+  const lowercaseKey = (k: any) => (typeof k === 'string' ? k.toLowerCase() : k)
   return new Proxy({} as { [k: string]: any }, {
     get: (t, k: string) => {
       k = lowercaseKey(k)
@@ -78,11 +79,12 @@ function caseInsensitiveObject(): { [k: string]: any } {
 }
 
 function lowercaseHeaders(headers: http.OutgoingHttpHeaders | object): http.OutgoingHttpHeaders {
-  let newHeaders = caseInsensitiveObject()
-  for (let k of Object.keys(headers)) {
+  const newHeaders = caseInsensitiveObject()
+  for (const k of Object.keys(headers)) {
     if (!(headers as any)[k] && (headers as any)[k] !== '') continue
     newHeaders[k] = (headers as any)[k]
   }
+
   return newHeaders
 }
 
@@ -123,7 +125,7 @@ export class HTTP<T> {
    * ```
    */
   static get<T>(url: string, options: HTTPRequestOptions = {}) {
-    return this.request<T>(url, { ...options, method: 'GET' })
+    return this.request<T>(url, {...options, method: 'GET'})
   }
 
   /**
@@ -138,7 +140,7 @@ export class HTTP<T> {
    * ```
    */
   static post<T>(url: string, options: HTTPRequestOptions = {}) {
-    return this.request<T>(url, { ...options, method: 'POST' })
+    return this.request<T>(url, {...options, method: 'POST'})
   }
 
   /**
@@ -153,7 +155,7 @@ export class HTTP<T> {
    * ```
    */
   static put<T>(url: string, options: HTTPRequestOptions = {}) {
-    return this.request<T>(url, { ...options, method: 'PUT' })
+    return this.request<T>(url, {...options, method: 'PUT'})
   }
 
   /**
@@ -168,7 +170,7 @@ export class HTTP<T> {
    * ```
    */
   static async patch<T>(url: string, options: HTTPRequestOptions = {}) {
-    return this.request<T>(url, { ...options, method: 'PATCH' })
+    return this.request<T>(url, {...options, method: 'PATCH'})
   }
 
   /**
@@ -183,7 +185,7 @@ export class HTTP<T> {
    * ```
    */
   static async delete<T>(url: string, options: HTTPRequestOptions = {}) {
-    return this.request<T>(url, { ...options, method: 'DELETE' })
+    return this.request<T>(url, {...options, method: 'DELETE'})
   }
 
   /**
@@ -199,11 +201,11 @@ export class HTTP<T> {
    * ```
    */
   static stream(url: string, options: HTTPRequestOptions = {}) {
-    return this.request(url, { ...options, raw: true })
+    return this.request(url, {...options, raw: true})
   }
 
   static async request<T>(url: string, options: HTTPRequestOptions = {}): Promise<HTTP<T>> {
-    let http = new this<T>(url, options)
+    const http = new this<T>(url, options)
     await http._request()
     return http
   }
@@ -221,39 +223,47 @@ export class HTTP<T> {
   get method(): string {
     return this.options.method || 'GET'
   }
+
   get statusCode(): number {
     if (!this.response) return 0
     return this.response.statusCode || 0
   }
+
   get secure(): boolean {
     return this.options.protocol === 'https:'
   }
+
   get url(): string {
     return `${this.options.protocol}//${this.options.host}${this.options.path}`
   }
+
   set url(input: string) {
-    let u = uri.parse(input)
+    // eslint-disable-next-line node/no-deprecated-api
+    const u = uri.parse(input)
     this.options.protocol = u.protocol || this.options.protocol
     this.options.host = u.hostname || this.ctor.defaults.host || 'localhost'
     this.options.path = u.path || '/'
     this.options.agent = this.options.agent || deps.proxy.agent(this.secure, this.options.host)
     this.options.port = u.port || this.options.port || (this.secure ? 443 : 80)
   }
+
   get headers(): http.IncomingMessage['headers'] {
     if (!this.response) return {}
     return this.response.headers
   }
+
   get partial(): boolean {
     if (this.method !== 'GET' || this.options.partial) return true
-    return !(this.headers['next-range'] && this.body instanceof Array)
+    return !(this.headers['next-range'] && Array.isArray(this.body))
   }
+
   get ctor() {
     return this.constructor as typeof HTTP
   }
 
   constructor(url: string, options: HTTPRequestOptions = {}) {
     const userAgent =
-      (global['http-call'] && global['http-call']!.userAgent && global['http-call']!.userAgent) ||
+      ((global as Global).httpCall && (global as Global).httpCall!.userAgent && (global as Global).httpCall!.userAgent) ||
       `${pjson.name}/${pjson.version} node-${process.version}`
     this.options = {
       ...this.ctor.defaults,
@@ -273,16 +283,18 @@ export class HTTP<T> {
     this._debugRequest()
     try {
       this.response = await this._performRequest()
-    } catch (err) {
-      debug(err)
-      return this._maybeRetry(err)
+    } catch (error: any) {
+      debug(error)
+      return this._maybeRetry(error)
     }
+
     if (this._shouldParseResponseBody) await this._parse()
     this._debugResponse()
     if (this._responseRedirect) return this._redirect()
     if (!this._responseOK) {
       throw new HTTPError(this)
     }
+
     if (!this.partial) await this._getNextRange()
   }
 
@@ -296,6 +308,7 @@ export class HTTP<T> {
     } else {
       this.url = location
     }
+
     await this._request()
   }
 
@@ -307,20 +320,22 @@ export class HTTP<T> {
       if (err.code === 'ENOTFOUND') return true
       return require('is-retry-allowed')(err)
     }
+
     if (allowed(err)) {
-      let noise = Math.random() * 100
+      const noise = Math.random() * 100
       // tslint:disable-next-line
-      await this._wait((1 << this._errorRetries) * 100 + noise)
+      await this._wait(((1 << this._errorRetries) * 100) + noise)
       await this._request()
       return
     }
+
     throw err
   }
 
   private get _chalk(): any {
     try {
       return require('chalk')
-    } catch (err) { return }
+    } catch {}
   }
 
   private _renderStatus(code: number) {
@@ -334,8 +349,8 @@ export class HTTP<T> {
 
   private _debugRequest() {
     if (!debug.enabled) return
-    let output = [`${this._chalk.bold('→')} ${this._chalk.blue.bold(this.options.method)} ${this._chalk.bold(this.url)}`]
-    if (this.options.agent) output.push(`  proxy: ${util.inspect(this.options.agent)}`)
+    const output = [`${this._chalk.bold('→')} ${this._chalk.blue.bold(this.options.method)} ${this._chalk.bold(this.url)}`]
+    if (this.options.agent) output.push(`  proxy: ${inspect(this.options.agent)}`)
     if (debugHeaders.enabled) output.push(this._renderHeaders(this.options.headers))
     if (this.options.body) output.push(this.options.body)
     debug(output.join('\n'))
@@ -344,23 +359,23 @@ export class HTTP<T> {
   private _debugResponse() {
     if (!debug.enabled) return
     const chalk = require('chalk')
-    let output = [`${this._chalk.white.bold('←')} ${this._chalk.blue.bold(this.method)} ${this._chalk.bold(this.url)} ${this._renderStatus(this.statusCode)}`]
+    const output = [`${this._chalk.white.bold('←')} ${this._chalk.blue.bold(this.method)} ${this._chalk.bold(this.url)} ${this._renderStatus(this.statusCode)}`]
     if (debugHeaders.enabled) output.push(this._renderHeaders(this.headers))
-    if (this.body) output.push(util.inspect(this.body))
+    if (this.body) output.push(inspect(this.body))
     debug(output.join('\n'))
   }
 
   private _renderHeaders(headers: http.IncomingHttpHeaders | http.OutgoingHttpHeaders): string {
-    headers = { ...headers }
+    headers = {...headers}
     if (process.env.HTTP_CALL_REDACT !== '0' && headers.authorization) headers.authorization = '[REDACTED]'
     return Object.entries(headers)
-    .sort(([a], [b]) => {
-      if (a < b) return -1
-      if (a > b) return 1
-      return 0
-    })
-    .map(([k, v]) => `  ${this._chalk.dim(k + ':')} ${this._chalk.cyan(util.inspect(v))}`)
-    .join('\n')
+      .sort(([a], [b]) => {
+        if (a < b) return -1
+        if (a > b) return 1
+        return 0
+      })
+      .map(([k, v]) => `  ${this._chalk.dim(k + ':')} ${this._chalk.cyan(inspect(v))}`)
+      .join('\n')
   }
 
   private _performRequest(): Promise<http.IncomingMessage> {
@@ -370,12 +385,14 @@ export class HTTP<T> {
       } else {
         this.request = deps.http.request(this.options, resolve)
       }
+
       if (this.options.timeout) {
         this.request.setTimeout(this.options.timeout, () => {
           debug(`← ${this.method} ${this.url} TIMED OUT`)
           this.request.abort()
         })
       }
+
       this.request.on('error', reject)
       this.request.on('timeout', reject)
       if (this.options.body && deps.isStream.readable(this.options.body)) {
@@ -388,8 +405,8 @@ export class HTTP<T> {
 
   private async _parse() {
     this.body = await concat(this.response) as T
-    let type = this.response.headers['content-type'] ? deps.contentType.parse(this.response).type : ''
-    let json = type.startsWith('application/json') || type.endsWith('+json')
+    const type = this.response.headers['content-type'] ? deps.contentType.parse(this.response).type : ''
+    const json = type.startsWith('application/json') || type.endsWith('+json')
     if (json) this.body = JSONParse(this.body as any as string)
   }
 
@@ -398,6 +415,7 @@ export class HTTP<T> {
       this.options.body = body
       return
     }
+
     if (!this.options.headers['content-type']) {
       this.options.headers['content-type'] = 'application/json'
     }
@@ -407,13 +425,14 @@ export class HTTP<T> {
     } else {
       this.options.body = body
     }
+
     this.options.headers['content-length'] = Buffer.byteLength(this.options.body).toString()
   }
 
   private async _getNextRange() {
     const next = this.headers['next-range']
     this.options.headers.range = Array.isArray(next) ? next[0] : next
-    let prev = this.body
+    const prev = this.body
     await this._request()
     this.body = (prev as any).concat(this.body)
   }
@@ -449,7 +468,7 @@ export class HTTPError extends Error {
     super()
     if (typeof http.body === 'string' || typeof http.body.message === 'string')
       this.message = http.body.message || http.body
-    else this.message = util.inspect(http.body)
+    else this.message = inspect(http.body)
     this.message = `HTTP Error ${http.statusCode} for ${http.method} ${http.url}\n${this.message}`
     this.statusCode = http.statusCode
     this.http = http
