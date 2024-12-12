@@ -1,0 +1,22 @@
+{
+  "extends": [
+    "oclif",
+    "oclif-typescript"
+  ],
+  "rules": {
+    "@typescript-eslint/ban-types": "warn",
+    "@typescript-eslint/no-unused-vars": "warn",
+    "unicorn/consistent-function-scoping": "off",
+    "indent": ["error", 2, {"MemberExpression": 1}],
+    "new-cap": "off",
+    "no-else-return": "warn",
+    "no-promise-executor-return": "warn",
+    "node/no-extraneous-require": "warn",
+    "unicorn/import-style": "off",
+    "unicorn/no-static-only-class": "warn",
+    "unicorn/prefer-node-protocol": "warn",
+    "unicorn/prefer-spread": "warn",
+    "unicorn/prefer-string-slice": "warn",
+    "unicorn/prefer-ternary": "off"
+  }
+}

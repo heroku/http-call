@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import * as uri from 'url'
+import {URL} from 'url'
 
 interface ProxyOptions {
   proxy: {
@@ -16,6 +16,7 @@ export default class ProxyUtil {
   static get httpProxy() {
     return this.env.HTTP_PROXY || this.env.http_proxy
   }
+
   static get httpsProxy() {
     return this.env.HTTPS_PROXY || this.env.https_proxy
   }
@@ -29,9 +30,9 @@ export default class ProxyUtil {
     if (this.noProxy === '*') return true
 
     return this.noProxy
-        .split(',')
-        .map(p => p.trim())
-        .some(p => (p[0] === '.' && host.endsWith(p.substr(1))) || host.endsWith(p))
+      .split(',')
+      .map(p => p.trim())
+      .some(p => (p[0] === '.' && host.endsWith(p.substr(1))) || host.endsWith(p))
   }
 
   static usingProxy(host?: string): boolean {
@@ -56,7 +57,7 @@ export default class ProxyUtil {
   }
 
   static get certs(): Array<Buffer> {
-    let filenames = this.sslCertFile.concat(this.sslCertDir)
+    const filenames = this.sslCertFile.concat(this.sslCertDir)
     return filenames.map((filename): Buffer => fs.readFileSync(filename))
   }
 
@@ -64,28 +65,30 @@ export default class ProxyUtil {
     if (!this.usingProxy(host)) return
     const u = https ? this.httpsProxy || this.httpProxy : this.httpProxy
     if (u) {
-      let proxyParsed = uri.parse(u)
-      let tunnel = require('tunnel-agent')
-      let tunnelMethod = https ? tunnel.httpsOverHttp : tunnel.httpOverHttp
-      let opts: ProxyOptions = {
+      const proxyParsed = new URL(u)
+      const tunnel = require('tunnel-agent')
+      const tunnelMethod = https ? tunnel.httpsOverHttp : tunnel.httpOverHttp
+      const opts: ProxyOptions = {
         proxy: {
-          host: proxyParsed.hostname,
+          host: proxyParsed.hostname || undefined,
           port: proxyParsed.port || '8080',
         },
       }
 
-      if (proxyParsed.auth) {
-        opts.proxy.proxyAuth = proxyParsed.auth
+      if (proxyParsed.username) {
+        const userInfo = proxyParsed.password ? `${proxyParsed.username}:${proxyParsed.password}` : proxyParsed.username
+        opts.proxy.proxyAuth = userInfo
       }
 
       if (this.certs.length > 0) {
         opts.ca = this.certs
       }
 
-      let tunnelAgent = tunnelMethod(opts)
+      const tunnelAgent = tunnelMethod(opts)
       if (https) {
         tunnelAgent.defaultPort = 443
       }
+
       return tunnelAgent
     }
   }
