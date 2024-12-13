@@ -1,6 +1,6 @@
 import http = require('http')
-import * as uri from 'url'
-import {inspect} from 'util'
+import * as uri from 'node:url'
+import {inspect} from 'node:util'
 import {deps} from './deps'
 // eslint-disable-next-line node/no-missing-import
 import {Global} from './global'
