@@ -1,7 +1,6 @@
 import http = require('http')
-import JSONParse = require('parse-json')
-import * as uri from 'url'
-import {inspect} from 'util'
+import * as uri from 'node:url'
+import {inspect} from 'node:util'
 import {deps} from './deps'
 // eslint-disable-next-line node/no-missing-import
 import {Global} from './global'
@@ -389,7 +388,7 @@ export class HTTP<T> {
       if (this.options.timeout) {
         this.request.setTimeout(this.options.timeout, () => {
           debug(`← ${this.method} ${this.url} TIMED OUT`)
-          this.request.abort()
+          this.request.destroy()
         })
       }
 
@@ -407,7 +406,7 @@ export class HTTP<T> {
     this.body = await concat(this.response) as T
     const type = this.response.headers['content-type'] ? deps.contentType.parse(this.response).type : ''
     const json = type.startsWith('application/json') || type.endsWith('+json')
-    if (json) this.body = JSONParse(this.body as any as string)
+    if (json) this.body = JSON.parse(this.body as any as string)
   }
 
   private _parseBody(body: object) {

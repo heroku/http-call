@@ -1,6 +1,6 @@
-import * as fs from 'fs'
-import * as path from 'path'
-import {URL} from 'url'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import {URL} from 'node:url'
 
 interface ProxyOptions {
   proxy: {
