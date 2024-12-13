@@ -366,6 +366,5 @@ describe('HTTP.stream()', () => {
     const {response} = await HTTP.stream('http://api.jdxcode.com')
     response.setEncoding('utf8')
     response.on('data', data => expect(data).toEqual('{"message":"ok"}'))
-    // response.on('end', done)
   })
 })
