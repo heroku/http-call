@@ -1,5 +1,5 @@
 import * as nock from 'nock'
-import * as querystring from 'querystring'
+import * as querystring from 'node:querystring'
 
 // eslint-disable-next-line node/no-missing-import
 import {Global} from './global'
