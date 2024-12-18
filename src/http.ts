@@ -387,9 +387,11 @@ export class HTTP<T> {
       }
 
       if (this.options.timeout) {
-        this.request.setTimeout(this.options.timeout, () => {
-          debug(`← ${this.method} ${this.url} TIMED OUT`)
+        this.request.setTimeout(this.options.timeout)
+        this.request.on('timeout', () => {
+          debug(`← ${this.method} ${this.url} TIMEOUT`)
           this.request.destroy()
+          reject()
         })
       }
 
