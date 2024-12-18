@@ -100,6 +100,7 @@ export class HTTP<T> {
     raw: false,
     partial: false,
     headers: {},
+    timeout: 60 * 1000,
   }
 
   static create(options: HTTPRequestOptions = {}): typeof HTTP {
@@ -386,14 +387,20 @@ export class HTTP<T> {
       }
 
       if (this.options.timeout) {
-        this.request.setTimeout(this.options.timeout, () => {
-          debug(`← ${this.method} ${this.url} TIMED OUT`)
+        this.request.setTimeout(this.options.timeout)
+        this.request.on('timeout', () => {
+          debug(`← ${this.method} ${this.url} TIMEOUT`)
           this.request.destroy()
+          reject(new Error('Request timed out'))
         })
       }
 
-      this.request.on('error', reject)
-      this.request.on('timeout', reject)
+      this.request.on('error', error => {
+        debug(`← ${this.method} ${this.url} ERROR`)
+        this.request.destroy()
+        reject(error)
+      })
+
       if (this.options.body && deps.isStream.readable(this.options.body)) {
         this.options.body.pipe(this.request)
       } else {
