@@ -100,7 +100,7 @@ export class HTTP<T> {
     raw: false,
     partial: false,
     headers: {},
-    timeout: 5000,
+    timeout: 60 * 1000,
   }
 
   static create(options: HTTPRequestOptions = {}): typeof HTTP {
@@ -391,7 +391,6 @@ export class HTTP<T> {
           debug(`← ${this.method} ${this.url} TIMED OUT`)
           this.request.destroy()
         })
-        this.request.on('timeout', reject)
       }
 
       this.request.on('error', reject)
