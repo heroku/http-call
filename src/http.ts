@@ -391,14 +391,14 @@ export class HTTP<T> {
         this.request.on('timeout', () => {
           debug(`← ${this.method} ${this.url} TIMEOUT`)
           this.request.destroy()
-          reject()
+          reject(new Error('Request timed out'))
         })
       }
 
-      this.request.on('error', () => {
+      this.request.on('error', error => {
         debug(`← ${this.method} ${this.url} ERROR`)
         this.request.destroy()
-        reject()
+        reject(error)
       })
 
       if (this.options.body && deps.isStream.readable(this.options.body)) {
