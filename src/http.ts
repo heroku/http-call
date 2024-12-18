@@ -395,7 +395,12 @@ export class HTTP<T> {
         })
       }
 
-      this.request.on('error', reject)
+      this.request.on('error', () => {
+        debug(`← ${this.method} ${this.url} ERROR`)
+        this.request.destroy()
+        reject()
+      })
+
       if (this.options.body && deps.isStream.readable(this.options.body)) {
         this.options.body.pipe(this.request)
       } else {
