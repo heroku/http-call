@@ -1,13 +1,19 @@
-import http = require('http')
 import * as uri from 'node:url'
 import {inspect} from 'node:util'
-import {deps} from './deps'
+import * as https from 'node:https'
+import * as http from 'node:http'
+import * as isStream from 'is-stream'
+import * as contentType from 'content-type'
+import isRetryAllowed = require('is-retry-allowed')
+import * as debugLib from 'debug'
+
 // eslint-disable-next-line node/no-missing-import
 import {Global} from './global'
 
 const pjson = require('../package.json')
-const debug = require('debug')('http')
-const debugHeaders = require('debug')('http:headers')
+
+const debug = debugLib('http')
+const debugHeaders = debugLib('http:headers')
 
 interface IErrorWithCode extends Error {
   code?: string
@@ -243,7 +249,6 @@ export class HTTP<T> {
     this.options.protocol = u.protocol || this.options.protocol
     this.options.host = u.hostname || this.ctor.defaults.host || 'localhost'
     this.options.path = u.path || '/'
-    this.options.agent = this.options.agent || deps.proxy.agent(this.secure, this.options.host)
     this.options.port = u.port || this.options.port || (this.secure ? 443 : 80)
   }
 
@@ -257,7 +262,7 @@ export class HTTP<T> {
     return !(this.headers['next-range'] && Array.isArray(this.body))
   }
 
-  get ctor() {
+  get ctor(): typeof HTTP {
     return this.constructor as typeof HTTP
   }
 
@@ -279,7 +284,7 @@ export class HTTP<T> {
     if (this.options.body) this._parseBody(this.options.body)
   }
 
-  async _request() {
+  async _request(): Promise<void> {
     this._debugRequest()
     try {
       this.response = await this._performRequest()
@@ -298,7 +303,7 @@ export class HTTP<T> {
     if (!this.partial) await this._getNextRange()
   }
 
-  async _redirect() {
+  async _redirect(): Promise<void> {
     this._redirectRetries++
     if (this._redirectRetries > 10) throw new Error(`Redirect loop at ${this.url}`)
     if (!this.headers.location) throw new Error(`Redirect from ${this.url} has no location header`)
@@ -312,13 +317,13 @@ export class HTTP<T> {
     await this._request()
   }
 
-  async _maybeRetry(err: Error) {
+  async _maybeRetry(err: Error): Promise<void> {
     this._errorRetries++
     const allowed = (err: IErrorWithCode): boolean => {
       if (this._errorRetries > 5) return false
       if (!err || !err.code) return false
       if (err.code === 'ENOTFOUND') return true
-      return require('is-retry-allowed')(err)
+      return isRetryAllowed(err)
     }
 
     if (allowed(err)) {
@@ -381,14 +386,13 @@ export class HTTP<T> {
   private _performRequest(): Promise<http.IncomingMessage> {
     return new Promise((resolve, reject) => {
       if (this.secure) {
-        this.request = deps.https.request(this.options, resolve)
+        this.request = https.request(this.options, resolve)
       } else {
-        this.request = deps.http.request(this.options, resolve)
+        this.request = http.request(this.options, resolve)
       }
 
       if (this.options.timeout) {
-        this.request.setTimeout(this.options.timeout)
-        this.request.on('timeout', () => {
+        this.request.setTimeout(this.options.timeout, () => {
           debug(`← ${this.method} ${this.url} TIMEOUT`)
           this.request.destroy()
           reject(new Error('Request timed out'))
@@ -401,7 +405,7 @@ export class HTTP<T> {
         reject(error)
       })
 
-      if (this.options.body && deps.isStream.readable(this.options.body)) {
+      if (this.options.body && isStream.readable(this.options.body)) {
         this.options.body.pipe(this.request)
       } else {
         this.request.end(this.options.body)
@@ -411,13 +415,13 @@ export class HTTP<T> {
 
   private async _parse() {
     this.body = await concat(this.response) as T
-    const type = this.response.headers['content-type'] ? deps.contentType.parse(this.response).type : ''
+    const type = this.response.headers['content-type'] ? contentType.parse(this.response).type : ''
     const json = type.startsWith('application/json') || type.endsWith('+json')
     if (json) this.body = JSON.parse(this.body as any as string)
   }
 
   private _parseBody(body: object) {
-    if (deps.isStream.readable(body)) {
+    if (isStream.readable(body)) {
       this.options.body = body
       return
     }

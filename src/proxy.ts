@@ -1,15 +1,5 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import {URL} from 'node:url'
-
-interface ProxyOptions {
-  proxy: {
-    host?: string
-    port?: string
-    proxyAuth?: string
-  }
-  ca?: Array<Buffer>
-}
 
 export default class ProxyUtil {
   static env = process.env
@@ -59,37 +49,5 @@ export default class ProxyUtil {
   static get certs(): Array<Buffer> {
     const filenames = this.sslCertFile.concat(this.sslCertDir)
     return filenames.map((filename): Buffer => fs.readFileSync(filename))
-  }
-
-  static agent(https: boolean, host?: string): any {
-    if (!this.usingProxy(host)) return
-    const u = https ? this.httpsProxy || this.httpProxy : this.httpProxy
-    if (u) {
-      const proxyParsed = new URL(u)
-      const tunnel = require('tunnel-agent')
-      const tunnelMethod = https ? tunnel.httpsOverHttp : tunnel.httpOverHttp
-      const opts: ProxyOptions = {
-        proxy: {
-          host: proxyParsed.hostname || undefined,
-          port: proxyParsed.port || '8080',
-        },
-      }
-
-      if (proxyParsed.username) {
-        const userInfo = proxyParsed.password ? `${proxyParsed.username}:${proxyParsed.password}` : proxyParsed.username
-        opts.proxy.proxyAuth = userInfo
-      }
-
-      if (this.certs.length > 0) {
-        opts.ca = this.certs
-      }
-
-      const tunnelAgent = tunnelMethod(opts)
-      if (https) {
-        tunnelAgent.defaultPort = 443
-      }
-
-      return tunnelAgent
-    }
   }
 }

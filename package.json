@@ -8,11 +8,11 @@
     "content-type": "^1.0.5",
     "debug": "^4.4.0",
     "is-retry-allowed": "^2.2.0",
-    "is-stream": "^2.0.0",
-    "tunnel-agent": "^0.6.0"
+    "is-stream": "^2.0.0"
   },
   "devDependencies": {
     "@types/content-type": "^1.1.8",
+    "@types/debug": "^4.1.12",
     "@types/istanbul-lib-report": "^3.0.3",
     "@types/jest": "^29.5.14",
     "@types/nock": "^10.0.3",
