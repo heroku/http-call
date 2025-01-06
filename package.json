@@ -1,7 +1,7 @@
 {
   "name": "@heroku/http-call",
   "description": "make http requests",
-  "version": "5.3.0",
+  "version": "5.4.0",
   "author": "Heroku",
   "bugs": "https://github.com/heroku/http-call/issues",
   "dependencies": {
