@@ -337,7 +337,7 @@ describe('HTTP.parseBody()', () => {
   })
 })
 
-describe('HTTP.renderHeaders()', () => {
+describe('debug logs', () => {
   let debugSpy: sinon.SinonSpy
   beforeEach(() => {
     debugSpy = sinon.spy(debug, 'log')
@@ -348,18 +348,25 @@ describe('HTTP.renderHeaders()', () => {
     debugSpy.restore()
   })
 
-  it('redacts authorization header', async () => {
+  it('redacts authorization header from debug logs', async () => {
     api.get('/').reply(200, {message: 'ok'}, {authorization: '1234567890'})
     await HTTP.get('https://api.jdxcode.com')
     // eslint-disable-next-line unicorn/no-hex-escape
     expect(debugSpy.secondCall.firstArg).toContain('authorization:\x1B[22m \x1B[36m\'[REDACTED]\'')
   })
 
-  it('redacts x-addon-sso header', async () => {
+  it('redacts x-addon-sso header from debug logs', async () => {
     api.get('/').reply(200, {message: 'ok'}, {'x-addon-sso': '1234567890'})
     await HTTP.get('https://api.jdxcode.com')
     // eslint-disable-next-line unicorn/no-hex-escape
     expect(debugSpy.secondCall.firstArg).toContain('x-addon-sso:\x1B[22m \x1B[36m\'[REDACTED]\'')
+  })
+
+  it('redacts the response from endpoints ending in /sso from debug logs', async () => {
+    api.get('/sso').reply(200, {message: 'ok'})
+    await HTTP.get('https://api.jdxcode.com/sso')
+    // eslint-disable-next-line unicorn/no-hex-escape
+    expect(debugSpy.secondCall.firstArg).toContain('http \x1B[0m[REDACTED]')
   })
 })
 

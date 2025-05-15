@@ -361,7 +361,12 @@ export class HTTP<T> {
     const chalk = require('chalk')
     const output = [`${this._chalk.white.bold('←')} ${this._chalk.blue.bold(this.method)} ${this._chalk.bold(this.url)} ${this._renderStatus(this.statusCode)}`]
     if (debugHeaders.enabled) output.push(this._renderHeaders(this.headers))
-    if (this.body) output.push(inspect(this.body))
+    if (this.body) {
+      if (this.options.path?.endsWith('/sso')) {
+        output.push('[REDACTED]')
+      } else output.push(inspect(this.body))
+    }
+
     debug(output.join('\n'))
   }
 
