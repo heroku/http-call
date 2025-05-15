@@ -1,5 +1,7 @@
 import * as nock from 'nock'
 import * as querystring from 'node:querystring'
+import * as sinon from 'sinon'
+const debug = require('debug')
 
 // eslint-disable-next-line node/no-missing-import
 import {Global} from './global'
@@ -332,6 +334,32 @@ describe('HTTP.parseBody()', () => {
       const {body} = await HTTP.get<number[]>('https://api.jdxcode.com')
       expect(body).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
     })
+  })
+})
+
+describe('HTTP.renderHeaders()', () => {
+  let debugSpy: sinon.SinonSpy
+  beforeEach(() => {
+    debugSpy = sinon.spy(debug, 'log')
+    debug.enable('*')
+  })
+  afterEach(() => {
+    debug.disable('*')
+    debugSpy.restore()
+  })
+
+  it('redacts authorization header', async () => {
+    api.get('/').reply(200, {message: 'ok'}, {authorization: '1234567890'})
+    await HTTP.get('https://api.jdxcode.com')
+    // eslint-disable-next-line unicorn/no-hex-escape
+    expect(debugSpy.secondCall.firstArg).toContain('authorization:\x1B[22m \x1B[36m\'[REDACTED]\'')
+  })
+
+  it('redacts x-addon-sso header', async () => {
+    api.get('/').reply(200, {message: 'ok'}, {'x-addon-sso': '1234567890'})
+    await HTTP.get('https://api.jdxcode.com')
+    // eslint-disable-next-line unicorn/no-hex-escape
+    expect(debugSpy.secondCall.firstArg).toContain('x-addon-sso:\x1B[22m \x1B[36m\'[REDACTED]\'')
   })
 })
 

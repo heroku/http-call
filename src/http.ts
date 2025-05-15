@@ -368,6 +368,7 @@ export class HTTP<T> {
   private _renderHeaders(headers: http.IncomingHttpHeaders | http.OutgoingHttpHeaders): string {
     headers = {...headers}
     if (process.env.HTTP_CALL_REDACT !== '0' && headers.authorization) headers.authorization = '[REDACTED]'
+    if (process.env.HTTP_CALL_REDACT !== '0' && headers['x-addon-sso']) headers['x-addon-sso'] = '[REDACTED]'
     return Object.entries(headers)
       .sort(([a], [b]) => {
         if (a < b) return -1
