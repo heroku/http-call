@@ -1,6 +1,7 @@
 import * as nock from 'nock'
 import * as querystring from 'node:querystring'
 import * as sinon from 'sinon'
+const stripAnsi = require('strip-ansi')
 const debug = require('debug')
 
 // eslint-disable-next-line node/no-missing-import
@@ -351,22 +352,19 @@ describe('debug logs', () => {
   it('redacts authorization header from debug logs', async () => {
     api.get('/').reply(200, {message: 'ok'}, {authorization: '1234567890'})
     await HTTP.get('https://api.jdxcode.com')
-    // eslint-disable-next-line unicorn/no-hex-escape
-    expect(debugSpy.secondCall.firstArg).toContain('authorization:\x1B[22m \x1B[36m\'[REDACTED]\'')
+    expect(stripAnsi(debugSpy.secondCall.firstArg)).toContain('authorization: \'[REDACTED]\'')
   })
 
   it('redacts x-addon-sso header from debug logs', async () => {
     api.get('/').reply(200, {message: 'ok'}, {'x-addon-sso': '1234567890'})
     await HTTP.get('https://api.jdxcode.com')
-    // eslint-disable-next-line unicorn/no-hex-escape
-    expect(debugSpy.secondCall.firstArg).toContain('x-addon-sso:\x1B[22m \x1B[36m\'[REDACTED]\'')
+    expect(stripAnsi(debugSpy.secondCall.firstArg)).toContain('x-addon-sso: \'[REDACTED]\'')
   })
 
   it('redacts the response from endpoints ending in /sso from debug logs', async () => {
     api.get('/sso').reply(200, {message: 'ok'})
     await HTTP.get('https://api.jdxcode.com/sso')
-    // eslint-disable-next-line unicorn/no-hex-escape
-    expect(debugSpy.secondCall.firstArg).toContain('http \x1B[0m[REDACTED]')
+    expect(stripAnsi(debugSpy.secondCall.firstArg)).toContain('http [REDACTED]')
   })
 })
 
