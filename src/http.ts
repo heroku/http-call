@@ -8,6 +8,7 @@ import {Global} from './global'
 const pjson = require('../package.json')
 const debug = require('debug')('http')
 const debugHeaders = require('debug')('http:headers')
+const chalk = require('chalk')
 
 interface IErrorWithCode extends Error {
   code?: string
@@ -332,24 +333,18 @@ export class HTTP<T> {
     throw err
   }
 
-  private get _chalk(): any {
-    try {
-      return require('chalk')
-    } catch {}
-  }
-
   private _renderStatus(code: number) {
     if (code < 200) return code
-    if (code < 300) return this._chalk.green(code)
-    if (code < 400) return this._chalk.bold.cyan(code)
-    if (code < 500) return this._chalk.bgYellow(code)
-    if (code < 600) return this._chalk.bgRed(code)
+    if (code < 300) return chalk.green(code)
+    if (code < 400) return chalk.bold.cyan(code)
+    if (code < 500) return chalk.bgYellow(code)
+    if (code < 600) return chalk.bgRed(code)
     return code
   }
 
   private _debugRequest() {
     if (!debug.enabled) return
-    const output = [`${this._chalk.bold('→')} ${this._chalk.blue.bold(this.options.method)} ${this._chalk.bold(this.url)}`]
+    const output = [`${chalk.bold('→')} ${chalk.blue.bold(this.options.method)} ${chalk.bold(this.url)}`]
     if (this.options.agent) output.push(`  proxy: ${inspect(this.options.agent)}`)
     if (debugHeaders.enabled) output.push(this._renderHeaders(this.options.headers))
     if (this.options.body) output.push(this.options.body)
@@ -358,23 +353,28 @@ export class HTTP<T> {
 
   private _debugResponse() {
     if (!debug.enabled) return
-    const chalk = require('chalk')
-    const output = [`${this._chalk.white.bold('←')} ${this._chalk.blue.bold(this.method)} ${this._chalk.bold(this.url)} ${this._renderStatus(this.statusCode)}`]
+    const output = [`${chalk.white.bold('←')} ${chalk.blue.bold(this.method)} ${chalk.bold(this.url)} ${this._renderStatus(this.statusCode)}`]
     if (debugHeaders.enabled) output.push(this._renderHeaders(this.headers))
-    if (this.body) output.push(inspect(this.body))
+    if (this.body) {
+      if (this.options.path?.endsWith('/sso')) {
+        output.push('[REDACTED]')
+      } else output.push(inspect(this.body))
+    }
+
     debug(output.join('\n'))
   }
 
   private _renderHeaders(headers: http.IncomingHttpHeaders | http.OutgoingHttpHeaders): string {
     headers = {...headers}
     if (process.env.HTTP_CALL_REDACT !== '0' && headers.authorization) headers.authorization = '[REDACTED]'
+    if (process.env.HTTP_CALL_REDACT !== '0' && headers['x-addon-sso']) headers['x-addon-sso'] = '[REDACTED]'
     return Object.entries(headers)
       .sort(([a], [b]) => {
         if (a < b) return -1
         if (a > b) return 1
         return 0
       })
-      .map(([k, v]) => `  ${this._chalk.dim(k + ':')} ${this._chalk.cyan(inspect(v))}`)
+      .map(([k, v]) => `  ${chalk.dim(k + ':')} ${chalk.cyan(inspect(v))}`)
       .join('\n')
   }
 
