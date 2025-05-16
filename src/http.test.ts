@@ -364,7 +364,7 @@ describe('debug logs', () => {
   it('redacts the response from endpoints ending in /sso from debug logs', async () => {
     api.get('/sso').reply(200, {message: 'ok'})
     await HTTP.get('https://api.jdxcode.com/sso')
-    expect(stripAnsi(debugSpy.secondCall.firstArg)).toContain('http [REDACTED]')
+    expect(stripAnsi(debugSpy.secondCall.firstArg)).toContain('[REDACTED]')
   })
 })
 
