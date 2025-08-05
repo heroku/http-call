@@ -5,7 +5,7 @@
   "author": "Heroku",
   "bugs": "https://github.com/heroku/http-call/issues",
   "dependencies": {
-    "chalk": "^4.1.2",
+    "chalk": "^5.5.0",
     "content-type": "^1.0.5",
     "debug": "^4.4.0",
     "is-retry-allowed": "^2.2.0",
