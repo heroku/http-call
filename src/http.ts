@@ -427,7 +427,11 @@ export class HTTP<T> {
     }
 
     if (this.options.headers['content-type'] === 'application/json') {
-      this.options.body = JSON.stringify(body)
+      if (typeof body !== 'string') {
+        this.options.body = JSON.stringify(body)
+      } else {
+        this.options.body = body
+      }
     } else {
       this.options.body = body
     }
