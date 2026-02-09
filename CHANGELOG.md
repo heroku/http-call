@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.5.2](https://github.com/heroku/http-call/compare/http-call-v5.5.1...http-call-v5.5.2) (2026-02-09)
+
+
+### Miscellaneous Chores
+
+* update PR template ([#92](https://github.com/heroku/http-call/issues/92)) ([b286dd3](https://github.com/heroku/http-call/commit/b286dd398fe03a7245b1b36e52bf1ee961d36923))
+
 ## [5.5.1](https://github.com/heroku/http-call/compare/http-call-v5.5.0...http-call-v5.5.1) (2026-01-29)
 
 
