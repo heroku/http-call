@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.5.2](https://github.com/heroku/http-call/compare/http-call-v5.5.1...http-call-v5.5.2) (2026-03-06)
+
+
+### Bug Fixes
+
+* **deps:** bump minimatch from 3.1.2 to 3.1.5 ([#94](https://github.com/heroku/http-call/issues/94)) ([e77bd79](https://github.com/heroku/http-call/commit/e77bd79086bb17fdb6775b71164a31fb6f58796a))
+
 ## [5.5.1](https://github.com/heroku/http-call/compare/http-call-v5.5.0...http-call-v5.5.1) (2026-01-29)
 
 
