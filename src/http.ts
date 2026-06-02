@@ -413,7 +413,7 @@ export class HTTP<T> {
     this.body = await concat(this.response) as T
     const type = this.response.headers['content-type'] ? deps.contentType.parse(this.response).type : ''
     const json = type.startsWith('application/json') || type.endsWith('+json')
-    if (json) this.body = JSON.parse(this.body as any as string)
+    if (json && this.body) this.body = JSON.parse(this.body as any as string)
   }
 
   private _parseBody(body: object) {
