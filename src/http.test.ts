@@ -122,6 +122,11 @@ describe('HTTP.get()', () => {
     await HTTP.get('https://api.jdxcode.com', {headers})
   })
 
+  test('handles empty body with JSON content-type', async () => {
+    api.get('/').reply(204, '', {'content-type': 'application/json'})
+    await HTTP.get('https://api.jdxcode.com')
+  })
+
   describe('wait mocked out', () => {
     const wait = (HTTP.prototype as any)._wait
 
