@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.5.3](https://github.com/heroku/http-call/compare/http-call-v5.5.2...http-call-v5.5.3) (2026-06-11)
+
+
+### Bug Fixes
+
+* **deps:** bump fast-uri from 3.0.3 to 3.1.2 ([#102](https://github.com/heroku/http-call/issues/102)) ([67fde35](https://github.com/heroku/http-call/commit/67fde35541ff8e901b5a56d333681eff6292a592))
+
 ## [5.5.2](https://github.com/heroku/http-call/compare/http-call-v5.5.1...http-call-v5.5.2) (2026-06-03)
 
 
