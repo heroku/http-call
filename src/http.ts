@@ -37,6 +37,7 @@ export type FullHTTPRequestOptions = http.ClientRequestArgs & {
   body?: any
   partial?: boolean
   headers: http.OutgoingHttpHeaders
+  followRedirects?: boolean
 }
 
 export type HTTPRequestOptions = Partial<FullHTTPRequestOptions>
@@ -101,6 +102,7 @@ export class HTTP<T> {
     partial: false,
     headers: {},
     timeout: 60 * 1000,
+    followRedirects: true,
   }
 
   static create(options: HTTPRequestOptions = {}): typeof HTTP {
@@ -290,8 +292,13 @@ export class HTTP<T> {
 
     if (this._shouldParseResponseBody) await this._parse()
     this._debugResponse()
-    if (this._responseRedirect) return this._redirect()
-    if (!this._responseOK) {
+
+    if (this._responseRedirect && this.options.followRedirects !== false) {
+      return this._redirect()
+    }
+
+    // Don't throw error for redirects when followRedirects is false
+    if (!this._responseOK && !(this._responseRedirect && this.options.followRedirects === false)) {
       throw new HTTPError(this)
     }
 
