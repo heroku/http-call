@@ -68,7 +68,6 @@ function caseInsensitiveObject(): { [k: string]: any } {
     },
     deleteProperty: (t, k: string) => {
       k = lowercaseKey(k)
-      if (k in t) return false
       return delete t[k]
     },
     has: (t, k) => {
@@ -303,14 +302,52 @@ export class HTTP<T> {
     this._redirectRetries++
     if (this._redirectRetries > 10) throw new Error(`Redirect loop at ${this.url}`)
     if (!this.headers.location) throw new Error(`Redirect from ${this.url} has no location header`)
-    const location = this.headers.location
-    if (Array.isArray(location)) {
-      this.url = location[0]
-    } else {
-      this.url = location
+
+    const location = Array.isArray(this.headers.location) ?
+      this.headers.location[0] :
+      this.headers.location
+
+    const isCrossOrigin = !this._isSameOrigin(location)
+
+    // Strip sensitive headers for cross-origin redirects
+    if (isCrossOrigin) {
+      const sensitiveHeaders = [
+        'authorization',
+        'cookie',
+        'proxy-authorization',
+        'x-addon-sso',
+      ]
+
+      for (const header of sensitiveHeaders) {
+        delete this.options.headers[header]
+      }
     }
 
+    this.url = location
     await this._request()
+  }
+
+  /**
+   * Check if a redirect URL is same-origin with the current URL.
+   * Relative URLs are resolved against the current URL before comparison.
+   *
+   * @param redirectLocation - The Location header value from the redirect response
+   * @returns true if same-origin, false if cross-origin
+   */
+  private _isSameOrigin(redirectLocation: string): boolean {
+    try {
+      // Build current absolute URL
+      const currentUrl = new URL(this.url)
+
+      // Resolve redirect location against current URL
+      // This handles absolute, protocol-relative, path-absolute, and path-relative URLs
+      const redirectUrl = new URL(redirectLocation, currentUrl)
+
+      return currentUrl.origin === redirectUrl.origin
+    } catch (error) {
+      debug(`Failed to resolve redirect URL: ${redirectLocation}`, error)
+      return false
+    }
   }
 
   async _maybeRetry(err: Error) {
