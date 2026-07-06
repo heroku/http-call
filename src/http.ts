@@ -307,7 +307,17 @@ export class HTTP<T> {
       this.headers.location[0] :
       this.headers.location
 
+    const isNonPreservingStatusCode = [301, 302, 303].includes(this.statusCode)
     const isCrossOrigin = !this._isSameOrigin(location)
+
+    if (isNonPreservingStatusCode && this.method !== 'GET' && this.method !== 'HEAD') {
+      this.options.method = 'GET'
+      // Remove body and corresponding headers for GET requests
+      delete this.options.body
+      delete this.options.headers['content-type']
+      delete this.options.headers['content-length']
+      delete this.options.headers['transfer-encoding']
+    }
 
     // Strip sensitive headers for cross-origin redirects
     if (isCrossOrigin) {
