@@ -293,12 +293,11 @@ export class HTTP<T> {
     if (this._shouldParseResponseBody) await this._parse()
     this._debugResponse()
 
-    if (this._responseRedirect && this.options.followRedirects !== false) {
-      return this._redirect()
+    if (this._responseRedirect) {
+      return this.options.followRedirects !== false ? this._redirect() : undefined
     }
 
-    // Don't throw error for redirects when followRedirects is false
-    if (!this._responseOK && !(this._responseRedirect && this.options.followRedirects === false)) {
+    if (!this._responseOK) {
       throw new HTTPError(this)
     }
 
@@ -314,10 +313,13 @@ export class HTTP<T> {
       this.headers.location[0] :
       this.headers.location
 
-    const isNonPreservingStatusCode = [301, 302, 303].includes(this.statusCode)
-    const isCrossOrigin = !this._isSameOrigin(location)
+    const shouldRewriteMethodToGet =
+      ((this.statusCode === 301 || this.statusCode === 302) && this.method === 'POST') ||
+      (this.statusCode === 303 && !(this.method === 'GET' || this.method === 'HEAD'))
 
-    if (isNonPreservingStatusCode && this.method !== 'GET' && this.method !== 'HEAD') {
+    const isCrossOrigin = !this._isSameOriginRedirect(location)
+
+    if (shouldRewriteMethodToGet) {
       this.options.method = 'GET'
       // Remove body and corresponding headers for GET requests
       delete this.options.body
@@ -351,7 +353,7 @@ export class HTTP<T> {
    * @param redirectLocation - The Location header value from the redirect response
    * @returns true if same-origin, false if cross-origin
    */
-  private _isSameOrigin(redirectLocation: string): boolean {
+  private _isSameOriginRedirect(redirectLocation: string): boolean {
     try {
       // Build current absolute URL
       const currentUrl = new URL(this.url)
