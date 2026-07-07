@@ -294,7 +294,8 @@ export class HTTP<T> {
     this._debugResponse()
 
     if (this._responseRedirect) {
-      return this.options.followRedirects !== false ? this._redirect() : undefined
+      if (this.options.followRedirects === false) return
+      return this._redirect()
     }
 
     if (!this._responseOK) {
@@ -346,6 +347,26 @@ export class HTTP<T> {
     await this._request()
   }
 
+  async _maybeRetry(err: Error) {
+    this._errorRetries++
+    const allowed = (err: IErrorWithCode): boolean => {
+      if (this._errorRetries > 5) return false
+      if (!err || !err.code) return false
+      if (err.code === 'ENOTFOUND') return true
+      return require('is-retry-allowed')(err)
+    }
+
+    if (allowed(err)) {
+      const noise = Math.random() * 100
+      // tslint:disable-next-line
+      await this._wait(((1 << this._errorRetries) * 100) + noise)
+      await this._request()
+      return
+    }
+
+    throw err
+  }
+
   /**
    * Check if a redirect URL is same-origin with the current URL.
    * Relative URLs are resolved against the current URL before comparison.
@@ -367,26 +388,6 @@ export class HTTP<T> {
       debug(`Failed to resolve redirect URL: ${redirectLocation}`, error)
       return false
     }
-  }
-
-  async _maybeRetry(err: Error) {
-    this._errorRetries++
-    const allowed = (err: IErrorWithCode): boolean => {
-      if (this._errorRetries > 5) return false
-      if (!err || !err.code) return false
-      if (err.code === 'ENOTFOUND') return true
-      return require('is-retry-allowed')(err)
-    }
-
-    if (allowed(err)) {
-      const noise = Math.random() * 100
-      // tslint:disable-next-line
-      await this._wait(((1 << this._errorRetries) * 100) + noise)
-      await this._request()
-      return
-    }
-
-    throw err
   }
 
   private _renderStatus(code: number) {
