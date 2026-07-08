@@ -314,20 +314,7 @@ export class HTTP<T> {
       this.headers.location[0] :
       this.headers.location
 
-    const shouldRewriteMethodToGet =
-      ((this.statusCode === 301 || this.statusCode === 302) && this.method === 'POST') ||
-      (this.statusCode === 303 && !(this.method === 'GET' || this.method === 'HEAD'))
-
     const isCrossOrigin = !this._isSameOriginRedirect(location)
-
-    if (shouldRewriteMethodToGet) {
-      this.options.method = 'GET'
-      // Remove body and corresponding headers for GET requests
-      delete this.options.body
-      delete this.options.headers['content-type']
-      delete this.options.headers['content-length']
-      delete this.options.headers['transfer-encoding']
-    }
 
     // Strip sensitive headers for cross-origin redirects
     if (isCrossOrigin) {
