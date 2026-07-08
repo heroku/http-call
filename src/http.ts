@@ -330,7 +330,7 @@ export class HTTP<T> {
       }
     }
 
-    // Clear previous port so `set url()` derives the next hop's effective port
+    // Clear previous port so `set url()` derives the new port
     this.options.port = undefined
 
     this.url = redirectUrl
@@ -359,7 +359,7 @@ export class HTTP<T> {
 
   private _resolveRedirectUrl(redirectLocation: string) : {isSameOrigin: boolean, redirectUrl: string} {
     try {
-      // Build current absolute URL
+      // Build current URL
       const currentUrl = new URL(this.url)
       currentUrl.port = String(this.options.port)
 
