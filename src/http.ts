@@ -314,10 +314,10 @@ export class HTTP<T> {
       this.headers.location[0] :
       this.headers.location
 
-    const isCrossOrigin = !this._isSameOriginRedirect(location)
+    const {isSameOrigin, redirectUrl} = this._resolveRedirectUrl(location)
 
     // Strip sensitive headers for cross-origin redirects
-    if (isCrossOrigin) {
+    if (!isSameOrigin) {
       const sensitiveHeaders = [
         'authorization',
         'cookie',
@@ -330,7 +330,10 @@ export class HTTP<T> {
       }
     }
 
-    this.url = location
+    // Clear previous port so `set url()` derives the next hop's effective port
+    this.options.port = undefined
+
+    this.url = redirectUrl
     await this._request()
   }
 
@@ -354,26 +357,27 @@ export class HTTP<T> {
     throw err
   }
 
-  /**
-   * Check if a redirect URL is same-origin with the current URL.
-   * Relative URLs are resolved against the current URL before comparison.
-   *
-   * @param redirectLocation - The Location header value from the redirect response
-   * @returns true if same-origin, false if cross-origin
-   */
-  private _isSameOriginRedirect(redirectLocation: string): boolean {
+  private _resolveRedirectUrl(redirectLocation: string) : {isSameOrigin: boolean, redirectUrl: string} {
     try {
       // Build current absolute URL
       const currentUrl = new URL(this.url)
+      currentUrl.port = String(this.options.port)
 
       // Resolve redirect location against current URL
       // This handles absolute, protocol-relative, path-absolute, and path-relative URLs
       const redirectUrl = new URL(redirectLocation, currentUrl)
 
-      return currentUrl.origin === redirectUrl.origin
+      return {
+        isSameOrigin: currentUrl.origin === redirectUrl.origin,
+        redirectUrl: redirectUrl.toString(),
+      }
     } catch (error) {
       debug(`Failed to resolve redirect URL: ${redirectLocation}`, error)
-      return false
+
+      return {
+        isSameOrigin: false,
+        redirectUrl: redirectLocation,
+      }
     }
   }
 
