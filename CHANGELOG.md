@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.6.0](https://github.com/heroku/http-call/compare/http-call-v5.5.3...http-call-v5.6.0) (2026-07-09)
+
+
+### Features
+
+* remove sensitive headers for cross-origin redirects ([#109](https://github.com/heroku/http-call/issues/109)) ([2d6c42f](https://github.com/heroku/http-call/commit/2d6c42f6ecb3094201038a1c56c91ad1b232c983))
+
 ## [5.5.3](https://github.com/heroku/http-call/compare/http-call-v5.5.2...http-call-v5.5.3) (2026-06-11)
 
 
