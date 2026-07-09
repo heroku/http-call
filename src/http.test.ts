@@ -219,31 +219,223 @@ uh oh`)
     }
   })
 
-  test('follows redirect', async () => {
-    api.get('/foo1').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo2'})
-    api.get('/foo2').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo3'})
-    api.get('/foo3').reply(200, {success: true})
-    await HTTP.get('https://api.jdxcode.com/foo1')
-  })
-
-  test('follows redirect only 10 times', async () => {
-    api.get('/foo1').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo2'})
-    api.get('/foo2').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo3'})
-    api.get('/foo3').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo4'})
-    api.get('/foo4').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo5'})
-    api.get('/foo5').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo6'})
-    api.get('/foo6').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo7'})
-    api.get('/foo7').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo8'})
-    api.get('/foo8').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo9'})
-    api.get('/foo9').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo10'})
-    api.get('/foo10').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo11'})
-    api.get('/foo11').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo12'})
-    expect.assertions(1)
-    try {
-      await HTTP.get('https://api.jdxcode.com/foo1')
-    } catch (error: any) {
-      expect(error.message).toEqual('Redirect loop at https://api.jdxcode.com/foo11')
+  describe('redirect', () => {
+    const redirectHeaders = {
+      authorization: 'Bearer secret-token-123',
+      cookie: 'session=abc123; userid=456',
+      date: 'Tue, 07 Jul 2026 12:00:00 GMT',
+      'proxy-authorization': 'Basic xyz',
+      'x-addon-sso': 'sso-token',
     }
+
+    test('follows redirect', async () => {
+      api.get('/foo1').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo2'})
+      api.get('/foo2').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo3'})
+      api.get('/foo3').reply(200, {success: true})
+      await HTTP.get('https://api.jdxcode.com/foo1')
+    })
+
+    test('follows redirect only 10 times', async () => {
+      api.get('/foo1').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo2'})
+      api.get('/foo2').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo3'})
+      api.get('/foo3').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo4'})
+      api.get('/foo4').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo5'})
+      api.get('/foo5').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo6'})
+      api.get('/foo6').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo7'})
+      api.get('/foo7').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo8'})
+      api.get('/foo8').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo9'})
+      api.get('/foo9').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo10'})
+      api.get('/foo10').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo11'})
+      api.get('/foo11').reply(302, undefined, {Location: 'https://api.jdxcode.com/foo12'})
+      expect.assertions(1)
+      try {
+        await HTTP.get('https://api.jdxcode.com/foo1')
+      } catch (error: any) {
+        expect(error.message).toEqual('Redirect loop at https://api.jdxcode.com/foo11')
+      }
+    })
+
+    test('skips redirect if followRedirects is false', async () => {
+      const first = nock('https://api.jdxcode.com')
+        .get('/foo1')
+        .reply(302, undefined, {Location: 'https://api.jdxcode.com/foo2'})
+
+      const second = nock('https://api.jdxcode.com')
+        .get('/foo2')
+        .reply(200, {success: true})
+
+      const response = await HTTP.get('https://api.jdxcode.com/foo1', {followRedirects: false})
+
+      expect(first.isDone()).toBe(true)
+      expect(second.isDone()).toBe(false)
+      expect(response.statusCode).toBe(302)
+      expect(response.headers.location).toBe('https://api.jdxcode.com/foo2')
+    })
+
+    describe('removes sensitive headers for cross-origin redirects', () => {
+      test('host mismatch', async () => {
+        api
+          .get('/foo1')
+          .reply(302, undefined, {Location: 'https://docs.jdxcode.com/foo2'})
+
+        const differentHost = nock('https://docs.jdxcode.com')
+          .get('/foo2')
+          .reply(function () {
+            expect(this.req.headers.authorization).toBeUndefined()
+            expect(this.req.headers.cookie).toBeUndefined()
+            expect(this.req.headers['proxy-authorization']).toBeUndefined()
+            expect(this.req.headers['x-addon-sso']).toBeUndefined()
+            expect(this.req.headers.date).toBeDefined()
+
+            return [200, {success: true}]
+          })
+
+        await HTTP.get('https://api.jdxcode.com/foo1', {headers: redirectHeaders})
+
+        differentHost.done()
+      })
+
+      test('port mismatch', async () => {
+        api
+          .get('/foo1')
+          .reply(302, undefined, {Location: 'https://api.jdxcode.com:8080/foo2'})
+
+        const differentPort = nock('https://api.jdxcode.com:8080')
+          .get('/foo2')
+          .reply(function () {
+            expect(this.req.headers.authorization).toBeUndefined()
+            expect(this.req.headers.cookie).toBeUndefined()
+            expect(this.req.headers['proxy-authorization']).toBeUndefined()
+            expect(this.req.headers['x-addon-sso']).toBeUndefined()
+            expect(this.req.headers.date).toBeDefined()
+
+            return [200, {success: true}]
+          })
+
+        await HTTP.get('https://api.jdxcode.com/foo1', {headers: redirectHeaders})
+
+        differentPort.done()
+      })
+
+      test('scheme mismatch', async () => {
+        api
+          .get('/foo1')
+          .reply(302, undefined, {Location: 'http://api.jdxcode.com/foo2'})
+
+        const differentScheme = nock('http://api.jdxcode.com')
+          .get('/foo2')
+          .reply(function () {
+            expect(this.req.headers.authorization).toBeUndefined()
+            expect(this.req.headers.cookie).toBeUndefined()
+            expect(this.req.headers['proxy-authorization']).toBeUndefined()
+            expect(this.req.headers['x-addon-sso']).toBeUndefined()
+            expect(this.req.headers.date).toBeDefined()
+
+            return [200, {success: true}]
+          })
+
+        await HTTP.get('https://api.jdxcode.com/foo1', {headers: redirectHeaders})
+
+        differentScheme.done()
+      })
+    })
+
+    describe('preserves headers for same-origin redirects', () => {
+      test('absolute path', async () => {
+        api
+          .get('/foo1')
+          .reply(302, undefined, {Location: 'https://api.jdxcode.com/foo2'})
+
+        api
+          .get('/foo2')
+          .matchHeader('authorization', 'Bearer secret-token-123')
+          .matchHeader('cookie', 'session=abc123; userid=456')
+          .matchHeader('proxy-authorization', 'Basic xyz')
+          .matchHeader('x-addon-sso', 'sso-token')
+          .matchHeader('date', 'Tue, 07 Jul 2026 12:00:00 GMT')
+          .reply(200, {success: true})
+
+        await HTTP.get('https://api.jdxcode.com/foo1', {headers: redirectHeaders})
+      })
+
+      test('absolute path (non-default port)', async () => {
+        const extendedApi = nock('https://api.jdxcode.com:8080')
+          .get('/foo1')
+          .reply(302, undefined, {Location: 'https://api.jdxcode.com:8080/foo2'})
+
+        extendedApi
+          .get('/foo2')
+          .matchHeader('authorization', 'Bearer secret-token-123')
+          .matchHeader('cookie', 'session=abc123; userid=456')
+          .matchHeader('proxy-authorization', 'Basic xyz')
+          .matchHeader('x-addon-sso', 'sso-token')
+          .matchHeader('date', 'Tue, 07 Jul 2026 12:00:00 GMT')
+          .reply(200, {success: true})
+
+        await HTTP.get('https://api.jdxcode.com:8080/foo1', {headers: redirectHeaders})
+
+        extendedApi.done()
+      })
+
+      test('protocol-relative path', async () => {
+        api
+          .get('/foo1')
+          .reply(302, undefined, {Location: '//api.jdxcode.com/foo2'})
+
+        api
+          .get('/foo2')
+          .matchHeader('authorization', 'Bearer secret-token-123')
+          .matchHeader('cookie', 'session=abc123; userid=456')
+          .matchHeader('proxy-authorization', 'Basic xyz')
+          .matchHeader('x-addon-sso', 'sso-token')
+          .matchHeader('date', 'Tue, 07 Jul 2026 12:00:00 GMT')
+          .reply(200, {success: true})
+
+        await HTTP.get('https://api.jdxcode.com/foo1', {headers: redirectHeaders})
+      })
+
+      test('relative path', async () => {
+        const extendedApi = nock('https://api.jdxcode.com/v1/test')
+
+        extendedApi
+          .get('/foo1')
+          .reply(302, undefined, {Location: 'foo2'})
+
+        extendedApi
+          .get('/foo2')
+          .matchHeader('authorization', 'Bearer secret-token-123')
+          .matchHeader('cookie', 'session=abc123; userid=456')
+          .matchHeader('proxy-authorization', 'Basic xyz')
+          .matchHeader('x-addon-sso', 'sso-token')
+          .matchHeader('date', 'Tue, 07 Jul 2026 12:00:00 GMT')
+          .reply(200, {success: true})
+
+        await HTTP.get('https://api.jdxcode.com/v1/test/foo1', {headers: redirectHeaders})
+
+        extendedApi.done()
+      })
+
+      test('path-absolute path', async () => {
+        const extendedApi = nock('https://api.jdxcode.com/v1/test')
+
+        extendedApi
+          .get('/foo1')
+          .reply(302, undefined, {Location: '/foo2'})
+
+        api
+          .get('/foo2')
+          .matchHeader('authorization', 'Bearer secret-token-123')
+          .matchHeader('cookie', 'session=abc123; userid=456')
+          .matchHeader('proxy-authorization', 'Basic xyz')
+          .matchHeader('x-addon-sso', 'sso-token')
+          .matchHeader('date', 'Tue, 07 Jul 2026 12:00:00 GMT')
+          .reply(200, {success: true})
+
+        await HTTP.get('https://api.jdxcode.com/v1/test/foo1', {headers: redirectHeaders})
+
+        extendedApi.done()
+      })
+    })
   })
 })
 

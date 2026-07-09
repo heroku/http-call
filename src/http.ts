@@ -37,6 +37,7 @@ export type FullHTTPRequestOptions = http.ClientRequestArgs & {
   body?: any
   partial?: boolean
   headers: http.OutgoingHttpHeaders
+  followRedirects?: boolean
 }
 
 export type HTTPRequestOptions = Partial<FullHTTPRequestOptions>
@@ -68,7 +69,6 @@ function caseInsensitiveObject(): { [k: string]: any } {
     },
     deleteProperty: (t, k: string) => {
       k = lowercaseKey(k)
-      if (k in t) return false
       return delete t[k]
     },
     has: (t, k) => {
@@ -102,6 +102,7 @@ export class HTTP<T> {
     partial: false,
     headers: {},
     timeout: 60 * 1000,
+    followRedirects: true,
   }
 
   static create(options: HTTPRequestOptions = {}): typeof HTTP {
@@ -291,7 +292,12 @@ export class HTTP<T> {
 
     if (this._shouldParseResponseBody) await this._parse()
     this._debugResponse()
-    if (this._responseRedirect) return this._redirect()
+
+    if (this._responseRedirect) {
+      if (this.options.followRedirects === false) return
+      return this._redirect()
+    }
+
     if (!this._responseOK) {
       throw new HTTPError(this)
     }
@@ -303,13 +309,31 @@ export class HTTP<T> {
     this._redirectRetries++
     if (this._redirectRetries > 10) throw new Error(`Redirect loop at ${this.url}`)
     if (!this.headers.location) throw new Error(`Redirect from ${this.url} has no location header`)
-    const location = this.headers.location
-    if (Array.isArray(location)) {
-      this.url = location[0]
-    } else {
-      this.url = location
+
+    const location = Array.isArray(this.headers.location) ?
+      this.headers.location[0] :
+      this.headers.location
+
+    const {isSameOrigin, redirectUrl} = this._resolveRedirectUrl(location)
+
+    // Strip sensitive headers for cross-origin redirects
+    if (!isSameOrigin) {
+      const sensitiveHeaders = [
+        'authorization',
+        'cookie',
+        'proxy-authorization',
+        'x-addon-sso',
+      ]
+
+      for (const header of sensitiveHeaders) {
+        delete this.options.headers[header]
+      }
     }
 
+    // Clear previous port so `set url()` derives the new port
+    this.options.port = undefined
+
+    this.url = redirectUrl
     await this._request()
   }
 
@@ -331,6 +355,30 @@ export class HTTP<T> {
     }
 
     throw err
+  }
+
+  private _resolveRedirectUrl(redirectLocation: string) : {isSameOrigin: boolean, redirectUrl: string} {
+    try {
+      // Build current URL
+      const currentUrl = new URL(this.url)
+      currentUrl.port = String(this.options.port)
+
+      // Resolve redirect location against current URL
+      // This handles absolute, protocol-relative, path-absolute, and path-relative URLs
+      const redirectUrl = new URL(redirectLocation, currentUrl)
+
+      return {
+        isSameOrigin: currentUrl.origin === redirectUrl.origin,
+        redirectUrl: redirectUrl.toString(),
+      }
+    } catch (error) {
+      debug(`Failed to resolve redirect URL: ${redirectLocation}`, error)
+
+      return {
+        isSameOrigin: false,
+        redirectUrl: redirectLocation,
+      }
+    }
   }
 
   private _renderStatus(code: number) {
