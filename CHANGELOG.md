@@ -1,5 +1,25 @@
 # Changelog
 
+## [5.6.0-beta.0](https://github.com/heroku/http-call/compare/http-call-v5.5.1-beta.0...http-call-v5.6.0-beta.0) (2026-07-09)
+
+
+### Features
+
+* remove sensitive headers for cross-origin redirects ([#109](https://github.com/heroku/http-call/issues/109)) ([2d6c42f](https://github.com/heroku/http-call/commit/2d6c42f6ecb3094201038a1c56c91ad1b232c983))
+
+
+### Bug Fixes
+
+* **deps:** bump fast-uri from 3.0.3 to 3.1.2 ([#102](https://github.com/heroku/http-call/issues/102)) ([67fde35](https://github.com/heroku/http-call/commit/67fde35541ff8e901b5a56d333681eff6292a592))
+* **deps:** bump flatted from 3.3.2 to 3.4.2 ([#98](https://github.com/heroku/http-call/issues/98)) ([8a57a94](https://github.com/heroku/http-call/commit/8a57a945e4b18651dffa41ab3e9a4bdaca72562b))
+* **deps:** bump handlebars from 4.7.8 to 4.7.9 ([#100](https://github.com/heroku/http-call/issues/100)) ([081a76e](https://github.com/heroku/http-call/commit/081a76e607dbd18a1ae49a40b3e32f3c49e0b8cf))
+* **deps:** bump lodash from 4.17.21 to 4.17.23 ([#91](https://github.com/heroku/http-call/issues/91)) ([fc2178b](https://github.com/heroku/http-call/commit/fc2178b4ea254ac049eda9762d0464af42daa074))
+* **deps:** bump lodash from 4.17.23 to 4.18.1 ([#101](https://github.com/heroku/http-call/issues/101)) ([d20e305](https://github.com/heroku/http-call/commit/d20e3054eba53b5ae6fb7bec6b7d1c5058f85115))
+* **deps:** bump minimatch from 3.1.2 to 3.1.5 ([#94](https://github.com/heroku/http-call/issues/94)) ([e77bd79](https://github.com/heroku/http-call/commit/e77bd79086bb17fdb6775b71164a31fb6f58796a))
+* **deps:** bump picomatch from 2.3.1 to 2.3.2 ([#99](https://github.com/heroku/http-call/issues/99)) ([9abc355](https://github.com/heroku/http-call/commit/9abc3555734ee585fa770a8c52e9177119a26f1b))
+* Move sinon to devdependencies and update other minor versions ([#81](https://github.com/heroku/http-call/issues/81)) ([7754607](https://github.com/heroku/http-call/commit/7754607c93437b855bbf80b536ef48f12331e187))
+* skip JSON.parse when response body is empty ([#103](https://github.com/heroku/http-call/issues/103)) ([4c6fc77](https://github.com/heroku/http-call/commit/4c6fc77331b91f1df432f370b0cbc8f60482cfe0))
+
 ## [5.5.3](https://github.com/heroku/http-call/compare/http-call-v5.5.2...http-call-v5.5.3) (2026-06-11)
 
 
