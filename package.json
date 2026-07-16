@@ -17,7 +17,7 @@
     "@types/istanbul-lib-report": "^3.0.3",
     "@types/jest": "^29.5.14",
     "@types/nock": "^10.0.3",
-    "@types/node": "20.14.8",
+    "@types/node": "22.16.5",
     "@types/sinon": "^17.0.4",
     "eslint": "^7.32.0",
     "eslint-config-oclif": "^4.0.0",
@@ -44,7 +44,7 @@
   "license": "ISC",
   "main": "lib/http.js",
   "repository": "heroku/http-call",
-  "resolutions": {
+  "overrides": {
     "@types/istanbul-lib-report": "^3.0.3"
   },
   "scripts": {

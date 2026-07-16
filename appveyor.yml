@@ -2,11 +2,10 @@ build: off
 environment:
   nodejs_version: "9"
 cache:
-  - '%LOCALAPPDATA%\Yarn -> appveyor.yml'
   - node_modules -> package.json
 
 install:
   - ps: Install-Product node $env:nodejs_version x64
-  - yarn
+  - npm ci
 test_script:
-  - yarn test --coverage
+  - npm test -- --coverage
