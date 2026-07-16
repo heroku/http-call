@@ -546,22 +546,25 @@ describe('debug logs', () => {
     debugSpy.restore()
   })
 
+  const debugOutputContains = (substring: string) =>
+    debugSpy.getCalls().some(call => stripAnsi(call.firstArg).includes(substring))
+
   it('redacts authorization header from debug logs', async () => {
     api.get('/').reply(200, {message: 'ok'}, {authorization: '1234567890'})
     await HTTP.get('https://api.jdxcode.com')
-    expect(stripAnsi(debugSpy.secondCall.firstArg)).toContain('authorization: \'[REDACTED]\'')
+    expect(debugOutputContains('authorization: \'[REDACTED]\'')).toBe(true)
   })
 
   it('redacts x-addon-sso header from debug logs', async () => {
     api.get('/').reply(200, {message: 'ok'}, {'x-addon-sso': '1234567890'})
     await HTTP.get('https://api.jdxcode.com')
-    expect(stripAnsi(debugSpy.secondCall.firstArg)).toContain('x-addon-sso: \'[REDACTED]\'')
+    expect(debugOutputContains('x-addon-sso: \'[REDACTED]\'')).toBe(true)
   })
 
   it('redacts the response from endpoints ending in /sso from debug logs', async () => {
     api.get('/sso').reply(200, {message: 'ok'})
     await HTTP.get('https://api.jdxcode.com/sso')
-    expect(stripAnsi(debugSpy.secondCall.firstArg)).toContain('[REDACTED]')
+    expect(debugOutputContains('[REDACTED]')).toBe(true)
   })
 })
 
