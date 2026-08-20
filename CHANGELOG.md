@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.6.1](https://github.com/heroku/http-call/compare/http-call-v5.6.0...http-call-v5.6.1) (2026-08-20)
+
+
+### Dependencies
+
+* bump fast-uri from 3.1.3 to 3.1.5 ([#117](https://github.com/heroku/http-call/issues/117)) ([7cf93b4](https://github.com/heroku/http-call/commit/7cf93b4301b673ee3b8974375d5eebfe38d60e06))
+* bump js-yaml and brace-expansion to patched versions ([#119](https://github.com/heroku/http-call/issues/119)) ([3d4def9](https://github.com/heroku/http-call/commit/3d4def9da3d4c060446c94fbd21fb8923beb20eb))
+
 ## [5.6.0](https://github.com/heroku/http-call/compare/http-call-v5.5.3...http-call-v5.6.0) (2026-07-09)
 
 
