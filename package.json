@@ -9,7 +9,7 @@
     "content-type": "^1.0.5",
     "debug": "^4.4.3",
     "is-retry-allowed": "^2.2.0",
-    "is-stream": "^2.0.1",
+    "is-stream": "^4.0.1",
     "tunnel-agent": "^0.6.0"
   },
   "devDependencies": {
