@@ -6,7 +6,7 @@
   "bugs": "https://github.com/heroku/http-call/issues",
   "dependencies": {
     "chalk": "^4.1.2",
-    "content-type": "^1.0.5",
+    "content-type": "^3.1.1",
     "debug": "^4.4.3",
     "is-retry-allowed": "^2.2.0",
     "is-stream": "^2.0.1",
