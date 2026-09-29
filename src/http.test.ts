@@ -1,4 +1,4 @@
-import * as nock from 'nock'
+import nock from 'nock'
 import * as querystring from 'node:querystring'
 import * as sinon from 'sinon'
 const stripAnsi = require('strip-ansi')
@@ -131,7 +131,7 @@ describe('HTTP.get()', () => {
     const wait = (HTTP.prototype as any)._wait
 
     beforeAll(() => {
-      (HTTP.prototype as any)._wait = jest.fn()
+      (HTTP.prototype as any)._wait = vi.fn()
     })
 
     afterAll(() => {
