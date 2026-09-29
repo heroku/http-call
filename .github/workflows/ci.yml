@@ -1,7 +1,14 @@
 name: Node CI Suite
 on:
-  push
+  push:
+    # Only run on pushes to main; PRs trigger via pull_request to avoid duplicate runs
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
 jobs:
+  # Cross-platform test matrix: coverage runs on every OS/node combo.
   test:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -15,4 +22,21 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
-      - run: npm test
+      - name: unit tests
+        run: npm run test:coverage
+
+  # Lint is its own job on a single OS/node, running concurrently with the test
+  # matrix — eslint output is identical on every OS/node combo, so a matrixed lint
+  # step would run 6x for zero extra signal. (npm ci fires `prepare`, so lib/ is
+  # built before lint without an explicit build step.)
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Use Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22.x
+      - run: npm ci
+      - name: linting
+        run: npm run lint

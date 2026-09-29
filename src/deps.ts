@@ -3,11 +3,11 @@ import http = require('http')
 import https = require('https')
 import isStream = require('is-stream')
 
-import proxy = require('./proxy')
+import * as proxy from './proxy'
 
 export const deps = {
   get proxy(): typeof proxy.default {
-    return fetch('./proxy').default
+    return proxy.default
   },
   get isStream(): typeof isStream {
     return fetch('is-stream')
