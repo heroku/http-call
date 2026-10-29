@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.6.3](https://github.com/heroku/http-call/compare/http-call-v5.6.2...http-call-v5.6.3) (2026-10-29)
+
+
+### Dependencies
+
+* bump fast-uri from 3.1.8 to 3.1.9 ([#139](https://github.com/heroku/http-call/issues/139)) ([939eed6](https://github.com/heroku/http-call/commit/939eed62afe3da31d888c1e1e66ba6be7f7dd4ec))
+
 ## [5.6.2](https://github.com/heroku/http-call/compare/http-call-v5.6.1...http-call-v5.6.2) (2026-09-22)
 
 
